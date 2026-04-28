@@ -2,6 +2,7 @@ package com.example.apitestingservice.service;
 
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.TestRun;
+import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.model.ExecutionResult;
 import com.example.apitestingservice.model.TestExecutionResponse;
 import com.example.apitestingservice.repository.ApiTestRepository;
@@ -33,7 +34,7 @@ public class TestExecutionService {
 
     public ExecutionResult runTest(Long testId) {
         ApiTest test = apiTestRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Test not found"));
+                .orElseThrow(() -> new NotFoundException("Test not found"));
 
         TestRun testRun = executeAndSave(test);
 
@@ -46,7 +47,7 @@ public class TestExecutionService {
 
     public List<TestExecutionResponse> runProjectTests(Long projectId) {
         projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new NotFoundException("Project not found"));
 
         return apiTestRepository.findByProjectId(projectId)
                 .stream()

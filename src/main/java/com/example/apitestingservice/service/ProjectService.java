@@ -1,6 +1,7 @@
 package com.example.apitestingservice.service;
 
 import com.example.apitestingservice.entity.Project;
+import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,16 +26,20 @@ public class ProjectService {
 
     public Project getProjectById(Long id) {
         return projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new NotFoundException("Project not found"));
     }
 
     public void deleteProject(Long id) {
+        if (!projectRepository.existsById(id)) {
+            throw new NotFoundException("Project not found");
+        }
+
         projectRepository.deleteById(id);
     }
 
     public Project updateProject(Long id, Project updatedProject) {
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new NotFoundException("Project not found"));
 
         project.setName(updatedProject.getName());
         project.setBaseUrl(updatedProject.getBaseUrl());

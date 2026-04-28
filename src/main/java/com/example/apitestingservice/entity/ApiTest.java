@@ -1,6 +1,9 @@
 package com.example.apitestingservice.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,11 +16,19 @@ public class ApiTest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String name;
     private String description;
     private String testKey;
+
+    @NotBlank
+    @Pattern(regexp = "GET|POST|PUT|DELETE", message = "Method must be one of: GET, POST, PUT, DELETE")
     private String method;
+
+    @NotBlank
     private String endpoint;
+
+    @NotNull
     private Integer expectedStatus;
 
     @ManyToOne  //у одного проекта может быть много тестов

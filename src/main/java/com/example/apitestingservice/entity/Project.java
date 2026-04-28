@@ -19,6 +19,7 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; //идентификатор
 
+    @NotBlank
     private String name; //название проекта
     @NotBlank
     private String baseUrl; //базовый URL тестируемого API

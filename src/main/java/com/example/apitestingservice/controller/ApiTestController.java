@@ -4,6 +4,7 @@ import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.model.TestExecutionResponse;
 import com.example.apitestingservice.service.ApiTestService;
 import com.example.apitestingservice.service.TestExecutionService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class ApiTestController {
     }
 
     @PostMapping
-    public ApiTest createApiTest(@PathVariable Long projectId, @RequestBody ApiTest apiTest) {
+    public ApiTest createApiTest(@PathVariable Long projectId, @RequestBody @Valid ApiTest apiTest) {
         return apiTestService.createApiTest(projectId, apiTest);
     }
 
