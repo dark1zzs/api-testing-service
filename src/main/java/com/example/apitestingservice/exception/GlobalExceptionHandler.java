@@ -3,7 +3,6 @@ package com.example.apitestingservice.exception;
 import com.example.apitestingservice.model.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,8 +34,8 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException exception) {
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableMessage() {
         return buildResponse(HttpStatus.BAD_REQUEST, "Request body is invalid", null);
     }
 
@@ -46,7 +45,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
+    public ResponseEntity<ErrorResponse> handleUnexpected() {
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Unexpected server error",

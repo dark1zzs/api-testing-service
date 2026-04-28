@@ -28,11 +28,4 @@ public class Project {
     public Project() {
     }
 
-    public Project(Long id, String name, String baseUrl, String description) {
-        this.id = id;
-        this.name = name;
-        this.baseUrl = baseUrl;
-        this.description = description;
-    }
-
 }
