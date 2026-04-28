@@ -1,39 +1,116 @@
 package com.example.apitestingservice.tests;
 
 import com.example.apitestingservice.model.ExecutionResult;
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 @Component
 public class ApiTestExecutor {
 
-    public ExecutionResult execute(String baseUrl, String endpoint, int expectedStatus) {
+    private static final Set<String> SUPPORTED_METHODS = Set.of("GET", "POST", "PUT", "DELETE");
+
+    private final RestClient restClient;
+
+    public ApiTestExecutor(RestClient.Builder builder) {
+        this.restClient = builder.build();
+    }
+
+    public ExecutionResult execute(String baseUrl, String endpoint, String method, Integer expectedStatus) {
 
         try {
-            String url = baseUrl + endpoint;
+            validateTestParameters(baseUrl, endpoint, method, expectedStatus);
 
-            Response response = RestAssured
-                    .given()
-                    .when()
-                    .get(url);
+            URI uri = buildUri(baseUrl, endpoint);
+            HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
 
-            int actualStatus = response.getStatusCode();
+            ResponseEntity<String> response = restClient
+                    .method(httpMethod)
+                    .uri(uri)
+                    .exchange((request, clientResponse) -> {
+                        String responseBody = new String(
+                                clientResponse.getBody().readAllBytes(),
+                                StandardCharsets.UTF_8
+                        );
 
+                        return ResponseEntity
+                                .status(clientResponse.getStatusCode())
+                                .headers(clientResponse.getHeaders())
+                                .body(responseBody);
+                    });
+
+            if (response == null) {
+                return new ExecutionResult(false, 0, "Response was not received");
+            }
+
+            int actualStatus = response.getStatusCode().value();
             boolean success = actualStatus == expectedStatus;
 
             return new ExecutionResult(
                     success,
                     actualStatus,
-                    success ? null : "Expected " + expectedStatus + ", but got " + actualStatus
+                    success ? null :
+                            "Expected " + expectedStatus + ", but got " + actualStatus
             );
 
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return new ExecutionResult(
                     false,
                     0,
                     e.getMessage()
             );
+        } catch (RestClientException e) {
+            return new ExecutionResult(
+                    false,
+                    0,
+                    "Request execution failed: " + e.getMessage()
+            );
+        } catch (Exception e) {
+            return new ExecutionResult(
+                    false,
+                    0,
+                    "Unexpected execution error: " + e.getMessage()
+            );
         }
+    }
+
+    private void validateTestParameters(String baseUrl, String endpoint, String method, Integer expectedStatus) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalArgumentException("Base URL must not be empty");
+        }
+
+        if (endpoint == null || endpoint.isBlank()) {
+            throw new IllegalArgumentException("Endpoint must not be empty");
+        }
+
+        if (method == null || method.isBlank()) {
+            throw new IllegalArgumentException("HTTP method must not be empty");
+        }
+
+        if (!SUPPORTED_METHODS.contains(method.toUpperCase())) {
+            throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+        }
+
+        if (expectedStatus == null) {
+            throw new IllegalArgumentException("Expected status must not be empty");
+        }
+    }
+
+    private URI buildUri(String baseUrl, String endpoint) {
+        String normalizedBaseUrl = baseUrl.endsWith("/")
+                ? baseUrl.substring(0, baseUrl.length() - 1)
+                : baseUrl;
+
+        String normalizedEndpoint = endpoint.startsWith("/")
+                ? endpoint
+                : "/" + endpoint;
+
+        return URI.create(normalizedBaseUrl + normalizedEndpoint);
     }
 }

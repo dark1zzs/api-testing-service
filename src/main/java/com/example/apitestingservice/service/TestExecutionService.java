@@ -3,24 +3,30 @@ package com.example.apitestingservice.service;
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.TestRun;
 import com.example.apitestingservice.model.ExecutionResult;
+import com.example.apitestingservice.model.TestExecutionResponse;
 import com.example.apitestingservice.repository.ApiTestRepository;
+import com.example.apitestingservice.repository.ProjectRepository;
 import com.example.apitestingservice.repository.TestRunRepository;
 import com.example.apitestingservice.tests.ApiTestExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class TestExecutionService {
 
     private final ApiTestRepository apiTestRepository;
+    private final ProjectRepository projectRepository;
     private final TestRunRepository testRunRepository;
     private final ApiTestExecutor apiTestExecutor;
 
     public TestExecutionService(ApiTestRepository apiTestRepository,
+                                ProjectRepository projectRepository,
                                 TestRunRepository testRunRepository,
                                 ApiTestExecutor apiTestExecutor) {
         this.apiTestRepository = apiTestRepository;
+        this.projectRepository = projectRepository;
         this.testRunRepository = testRunRepository;
         this.apiTestExecutor = apiTestExecutor;
     }
@@ -29,24 +35,55 @@ public class TestExecutionService {
         ApiTest test = apiTestRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test not found"));
 
-        String baseUrl = test.getProject().getBaseUrl();
+        TestRun testRun = executeAndSave(test);
 
+        return new ExecutionResult(
+                testRun.isSuccess(),
+                testRun.getStatusCode(),
+                testRun.getErrorMessage()
+        );
+    }
+
+    public List<TestExecutionResponse> runProjectTests(Long projectId) {
+        projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        return apiTestRepository.findByProjectId(projectId)
+                .stream()
+                .map(this::executeAndSave)
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private TestRun executeAndSave(ApiTest test) {
         ExecutionResult result = apiTestExecutor.execute(
-                baseUrl,
+                test.getProject().getBaseUrl(),
                 test.getEndpoint(),
+                test.getMethod(),
                 test.getExpectedStatus()
         );
 
-        // 🔥 сохраняем результат
+        LocalDateTime executedAt = LocalDateTime.now();
         TestRun testRun = new TestRun();
         testRun.setApiTest(test);
         testRun.setSuccess(result.isSuccess());
         testRun.setStatusCode(result.getStatusCode());
         testRun.setErrorMessage(result.getErrorMessage());
-        testRun.setExecutedAt(LocalDateTime.now());
+        testRun.setExecutedAt(executedAt);
 
-        testRunRepository.save(testRun);
+        return testRunRepository.save(testRun);
+    }
 
-        return result;
+    private TestExecutionResponse toResponse(TestRun testRun) {
+        ApiTest test = testRun.getApiTest();
+
+        return new TestExecutionResponse(
+                test.getId(),
+                test.getName(),
+                testRun.isSuccess(),
+                testRun.getStatusCode(),
+                testRun.getErrorMessage(),
+                testRun.getExecutedAt()
+        );
     }
 }
