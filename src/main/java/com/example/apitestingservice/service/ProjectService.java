@@ -1,5 +1,6 @@
 package com.example.apitestingservice.service;
 
+import com.example.apitestingservice.dto.ProjectRequest;
 import com.example.apitestingservice.entity.Project;
 import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.repository.ProjectRepository;
@@ -16,7 +17,12 @@ public class ProjectService {
         this.projectRepository = projectRepository;
     }
 
-    public Project createProject(Project project) {
+    public Project createProject(ProjectRequest request) {
+        Project project = new Project();
+        project.setName(request.name());
+        project.setBaseUrl(request.baseUrl());
+        project.setDescription(request.description());
+
         return projectRepository.save(project);
     }
 
@@ -37,13 +43,13 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
-    public Project updateProject(Long id, Project updatedProject) {
+    public Project updateProject(Long id, ProjectRequest request) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Project not found"));
 
-        project.setName(updatedProject.getName());
-        project.setBaseUrl(updatedProject.getBaseUrl());
-        project.setDescription(updatedProject.getDescription());
+        project.setName(request.name());
+        project.setBaseUrl(request.baseUrl());
+        project.setDescription(request.description());
 
         return projectRepository.save(project);
     }
