@@ -1,6 +1,7 @@
 package com.example.apitestingservice.service;
 
 import com.example.apitestingservice.dto.ApiTestRequest;
+import com.example.apitestingservice.dto.ApiTestResponse;
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.Project;
 import com.example.apitestingservice.exception.NotFoundException;
@@ -21,7 +22,7 @@ public class ApiTestService {
         this.projectRepository = projectRepository;
     }
 
-    public ApiTest createApiTest(Long projectId, ApiTestRequest request) {
+    public ApiTestResponse createApiTest(Long projectId, ApiTestRequest request) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new NotFoundException("Project not found"));
 
@@ -34,11 +35,26 @@ public class ApiTestService {
         apiTest.setExpectedStatus(request.expectedStatus());
         apiTest.setProject(project);
 
-        return apiTestRepository.save(apiTest);
+        return toResponse(apiTestRepository.save(apiTest));
     }
 
-    public List<ApiTest> getTestsByProjectId(Long projectId) {
-        return apiTestRepository.findByProjectId(projectId);
+    public List<ApiTestResponse> getTestsByProjectId(Long projectId) {
+        return apiTestRepository.findByProjectId(projectId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
+    private ApiTestResponse toResponse(ApiTest apiTest) {
+        return new ApiTestResponse(
+                apiTest.getId(),
+                apiTest.getName(),
+                apiTest.getDescription(),
+                apiTest.getTestKey(),
+                apiTest.getMethod(),
+                apiTest.getEndpoint(),
+                apiTest.getExpectedStatus(),
+                apiTest.getProject().getId()
+        );
+    }
 }

@@ -1,7 +1,7 @@
 package com.example.apitestingservice.controller;
 
 import com.example.apitestingservice.dto.ApiTestRequest;
-import com.example.apitestingservice.entity.ApiTest;
+import com.example.apitestingservice.dto.ApiTestResponse;
 import com.example.apitestingservice.model.TestExecutionResponse;
 import com.example.apitestingservice.service.ApiTestService;
 import com.example.apitestingservice.service.TestExecutionService;
@@ -23,12 +23,12 @@ public class ApiTestController {
     }
 
     @PostMapping
-    public ApiTest createApiTest(@PathVariable Long projectId, @RequestBody @Valid ApiTestRequest request) {
+    public ApiTestResponse createApiTest(@PathVariable Long projectId, @RequestBody @Valid ApiTestRequest request) {
         return apiTestService.createApiTest(projectId, request);
     }
 
     @GetMapping
-    public List<ApiTest> getTestsByProjectId(@PathVariable Long projectId) {
+    public List<ApiTestResponse> getTestsByProjectId(@PathVariable Long projectId) {
         return apiTestService.getTestsByProjectId(projectId);
     }
 

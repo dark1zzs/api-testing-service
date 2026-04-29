@@ -1,5 +1,6 @@
 package com.example.apitestingservice.service;
 
+import com.example.apitestingservice.dto.TestRunResponse;
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.TestRun;
 import com.example.apitestingservice.exception.NotFoundException;
@@ -56,6 +57,16 @@ public class TestExecutionService {
                 .toList();
     }
 
+    public List<TestRunResponse> getTestHistory(Long testId) {
+        apiTestRepository.findById(testId)
+                .orElseThrow(() -> new NotFoundException("Test not found"));
+
+        return testRunRepository.findByApiTestId(testId)
+                .stream()
+                .map(this::toHistoryResponse)
+                .toList();
+    }
+
     private TestRun executeAndSave(ApiTest test) {
         ExecutionResult result = apiTestExecutor.execute(
                 test.getProject().getBaseUrl(),
@@ -79,6 +90,20 @@ public class TestExecutionService {
         ApiTest test = testRun.getApiTest();
 
         return new TestExecutionResponse(
+                test.getId(),
+                test.getName(),
+                testRun.isSuccess(),
+                testRun.getStatusCode(),
+                testRun.getErrorMessage(),
+                testRun.getExecutedAt()
+        );
+    }
+
+    private TestRunResponse toHistoryResponse(TestRun testRun) {
+        ApiTest test = testRun.getApiTest();
+
+        return new TestRunResponse(
+                testRun.getId(),
                 test.getId(),
                 test.getName(),
                 testRun.isSuccess(),

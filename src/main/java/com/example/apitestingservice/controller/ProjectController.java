@@ -1,7 +1,7 @@
 package com.example.apitestingservice.controller;
 
 import com.example.apitestingservice.dto.ProjectRequest;
-import com.example.apitestingservice.entity.Project;
+import com.example.apitestingservice.dto.ProjectResponse;
 import com.example.apitestingservice.service.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +19,22 @@ public class ProjectController {
     }
 
     @PostMapping
-    public Project createProject(@RequestBody @Valid ProjectRequest request) {
+    public ProjectResponse createProject(@RequestBody @Valid ProjectRequest request) {
         return projectService.createProject(request);
     }
 
     @GetMapping
-    public List<Project> getAllProjects() {
+    public List<ProjectResponse> getAllProjects() {
         return projectService.getAllProjects();
     }
 
     @GetMapping("/{id}")
-    public Project getProjectById(@PathVariable Long id) {
+    public ProjectResponse getProjectById(@PathVariable Long id) {
         return projectService.getProjectById(id);
     }
 
     @PutMapping("/{id}")
-    public Project updateProject(
+    public ProjectResponse updateProject(
             @PathVariable Long id,
             @RequestBody @Valid ProjectRequest request
     ) {
