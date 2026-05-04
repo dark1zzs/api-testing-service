@@ -88,9 +88,7 @@ public class ProjectService {
                 .filter(testRun -> !testRun.isSuccess())
                 .count();
         long notRunTests = totalTests - lastRuns.size();
-        double successRate = totalTests == 0
-                ? 0.0
-                : (passedTests * 100.0) / totalTests;
+        double successRate = calculateSuccessRate(passedTests, totalTests);
         LocalDateTime lastRunAt = lastRuns.stream()
                 .map(TestRun::getExecutedAt)
                 .max(LocalDateTime::compareTo)
@@ -126,5 +124,14 @@ public class ProjectService {
         return testRunRepository.findByApiTestId(testId)
                 .stream()
                 .max(Comparator.comparing(TestRun::getExecutedAt));
+    }
+
+    private double calculateSuccessRate(long passedTests, long totalTests) {
+        if (totalTests == 0) {
+            return 0.0;
+        }
+
+        double rawRate = (passedTests * 100.0) / totalTests;
+        return Math.round(rawRate * 100.0) / 100.0;
     }
 }
