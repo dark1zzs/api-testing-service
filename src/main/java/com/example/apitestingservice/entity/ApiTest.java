@@ -37,6 +37,9 @@ public class ApiTest {
     private String expectedJsonPath;
     private String expectedJsonValue;
 
+    private String expectedHeaderName;
+    private String expectedHeaderValue;
+
     @NotNull
     private Integer expectedStatus;
 

@@ -2,6 +2,7 @@ package com.example.apitestingservice.tests;
 
 import com.example.apitestingservice.model.ExecutionResult;
 import io.restassured.path.json.JsonPath;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,32 @@ public class ApiTestExecutor {
             String expectedJsonValue,
             Integer expectedStatus
     ) {
+        return execute(
+                baseUrl,
+                endpoint,
+                method,
+                requestBody,
+                expectedResponseBody,
+                expectedJsonPath,
+                expectedJsonValue,
+                null,
+                null,
+                expectedStatus
+        );
+    }
+
+    public ExecutionResult execute(
+            String baseUrl,
+            String endpoint,
+            String method,
+            String requestBody,
+            String expectedResponseBody,
+            String expectedJsonPath,
+            String expectedJsonValue,
+            String expectedHeaderName,
+            String expectedHeaderValue,
+            Integer expectedStatus
+    ) {
 
         try {
             validateTestParameters(baseUrl, endpoint, method, expectedStatus);
@@ -98,6 +125,9 @@ public class ApiTestExecutor {
                     expectedResponseBody,
                     expectedJsonPath,
                     expectedJsonValue,
+                    expectedHeaderName,
+                    expectedHeaderValue,
+                    response.getHeaders(),
                     actualResponseBody
             );
             boolean success = errorMessage == null;
@@ -174,6 +204,9 @@ public class ApiTestExecutor {
             String expectedResponseBody,
             String expectedJsonPath,
             String expectedJsonValue,
+            String expectedHeaderName,
+            String expectedHeaderValue,
+            HttpHeaders actualHeaders,
             String actualResponseBody
     ) {
         if (actualStatus != expectedStatus) {
@@ -189,6 +222,13 @@ public class ApiTestExecutor {
             String jsonPathError = validateJsonPath(actualResponseBody, expectedJsonPath, expectedJsonValue);
             if (jsonPathError != null) {
                 return jsonPathError;
+            }
+        }
+
+        if (hasHeaderExpectation(expectedHeaderName, expectedHeaderValue)) {
+            String headerError = validateHeader(actualHeaders, expectedHeaderName, expectedHeaderValue);
+            if (headerError != null) {
+                return headerError;
             }
         }
 
@@ -245,5 +285,31 @@ public class ApiTestExecutor {
         }
 
         return trimmedPath;
+    }
+
+    private boolean hasHeaderExpectation(String expectedHeaderName, String expectedHeaderValue) {
+        return expectedHeaderName != null
+                && !expectedHeaderName.isBlank()
+                && expectedHeaderValue != null
+                && !expectedHeaderValue.isBlank();
+    }
+
+    private String validateHeader(
+            HttpHeaders actualHeaders,
+            String expectedHeaderName,
+            String expectedHeaderValue
+    ) {
+        String actualHeaderValue = actualHeaders.getFirst(expectedHeaderName);
+
+        if (actualHeaderValue == null) {
+            return "Header " + expectedHeaderName + " was not found in response";
+        }
+
+        if (!actualHeaderValue.contains(expectedHeaderValue)) {
+            return "Expected header " + expectedHeaderName + " to contain "
+                    + expectedHeaderValue + ", but got " + actualHeaderValue;
+        }
+
+        return null;
     }
 }

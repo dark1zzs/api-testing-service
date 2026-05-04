@@ -11,6 +11,8 @@ public record ApiTestResponse(
         String expectedResponseBody,
         String expectedJsonPath,
         String expectedJsonValue,
+        String expectedHeaderName,
+        String expectedHeaderValue,
         Integer expectedStatus,
         Long projectId
 ) {

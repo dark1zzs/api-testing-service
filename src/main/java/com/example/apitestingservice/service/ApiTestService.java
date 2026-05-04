@@ -36,6 +36,8 @@ public class ApiTestService {
         apiTest.setExpectedResponseBody(request.expectedResponseBody());
         apiTest.setExpectedJsonPath(request.expectedJsonPath());
         apiTest.setExpectedJsonValue(request.expectedJsonValue());
+        apiTest.setExpectedHeaderName(request.expectedHeaderName());
+        apiTest.setExpectedHeaderValue(request.expectedHeaderValue());
         apiTest.setExpectedStatus(request.expectedStatus());
         apiTest.setProject(project);
 
@@ -61,6 +63,8 @@ public class ApiTestService {
                 apiTest.getExpectedResponseBody(),
                 apiTest.getExpectedJsonPath(),
                 apiTest.getExpectedJsonValue(),
+                apiTest.getExpectedHeaderName(),
+                apiTest.getExpectedHeaderValue(),
                 apiTest.getExpectedStatus(),
                 apiTest.getProject().getId()
         );

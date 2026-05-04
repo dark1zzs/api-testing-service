@@ -164,6 +164,61 @@ class ApiTestExecutorTest {
     }
 
     @Test
+    void shouldTreatExpectedResponseHeaderAsSuccessfulResult() {
+        server.createContext("/headers", exchange -> {
+            exchange.getResponseHeaders().add("Content-Type", "application/json;charset=UTF-8");
+            send(exchange, 200, "{}");
+        });
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/headers",
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                "Content-Type",
+                "application/json",
+                200
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertNull(result.getErrorMessage());
+    }
+
+    @Test
+    void shouldFailWhenResponseHeaderDoesNotContainExpectedValue() {
+        server.createContext("/headers", exchange -> {
+            exchange.getResponseHeaders().add("Content-Type", "text/plain");
+            send(exchange, 200, "{}");
+        });
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/headers",
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                "Content-Type",
+                "application/json",
+                200
+        );
+
+        assertFalse(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(
+                "Expected header Content-Type to contain application/json, but got text/plain",
+                result.getErrorMessage()
+        );
+    }
+
+    @Test
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 

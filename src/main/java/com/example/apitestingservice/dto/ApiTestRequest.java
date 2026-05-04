@@ -16,6 +16,8 @@ public record ApiTestRequest(
         String expectedResponseBody,
         String expectedJsonPath,
         String expectedJsonValue,
+        String expectedHeaderName,
+        String expectedHeaderValue,
         @NotNull Integer expectedStatus
 ) {
 }
