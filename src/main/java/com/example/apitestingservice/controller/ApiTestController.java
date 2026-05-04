@@ -94,7 +94,11 @@ public class ApiTestController {
                                               "expectedHeaderName": "Content-Type",
                                               "expectedHeaderValue": "application/json",
                                               "maxResponseTimeMs": 1000,
-                                              "expectedStatus": 200
+                                              "expectedStatus": 200,
+                                              "runOrder": 0,
+                                              "requestHeadersJson": null,
+                                              "captureJsonPath": null,
+                                              "captureVariableName": null
                                             }
                                             """
                             )

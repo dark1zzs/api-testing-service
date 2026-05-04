@@ -57,7 +57,7 @@ class ProjectServiceReportTest {
         lastRun.setExecutedAt(LocalDateTime.parse("2026-05-04T12:00:00"));
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(apiTestRepository.findByProjectId(projectId)).thenReturn(List.of(test));
+        when(apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(projectId)).thenReturn(List.of(test));
         when(testRunRepository.findByApiTestId(10L)).thenReturn(List.of(lastRun));
         when(testRunRepository.findByApiTest_Project_Id(projectId)).thenReturn(List.of(
                 runWithMs(100L),

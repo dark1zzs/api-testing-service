@@ -76,7 +76,7 @@ public class ProjectService {
 
     public ProjectReportResponse getProjectReport(Long id) {
         Project project = findProjectById(id);
-        List<ApiTest> tests = apiTestRepository.findByProjectId(id);
+        List<ApiTest> tests = apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(id);
         List<ProjectReportTestResponse> testReports = tests.stream()
                 .map(this::toReportTestResponse)
                 .toList();

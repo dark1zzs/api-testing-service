@@ -13,12 +13,26 @@ Backend service for automated API testing, similar to a lightweight Postman/Newm
 - Spring Boot (Web MVC, Data JPA, Validation)
 - H2 database
 - springdoc-openapi (Swagger UI)
+- React 19 + TypeScript + Vite (`frontend/`)
 
-### Frontend (separate SPA)
+### Frontend (monorepo)
 
-**CORS** is enabled for `http://localhost:*` and `http://127.0.0.1:*` (see `WebConfig`) so a Vite/React (or similar) app can call `http://localhost:8080` without a dev proxy. In production, restrict `allowedOriginPatterns` to your real domain.
+The UI lives in `frontend/` (Vite + React + TypeScript + React Router). It calls the Spring API using `VITE_API_BASE` (default `http://localhost:8080` in code if unset).
 
-## Run
+**CORS** for local dev is enabled for `http://localhost:*` and `http://127.0.0.1:*` (see `WebConfig`). In production, narrow `allowedOriginPatterns` to your real domain.
+
+Run the UI (with the backend already on port 8080):
+
+```bash
+cd frontend
+cp .env.example .env.development   # optional; default base URL works without file
+npm install
+npm run dev
+```
+
+Then open the URL printed by Vite (usually `http://localhost:5173`).
+
+## Run (backend)
 
 ```bash
 ./mvnw spring-boot:run
@@ -50,6 +64,51 @@ Useful URLs after startup:
 ### Test Execution / History
 - `POST /tests/{testId}/run` - run one test
 - `GET /tests/{testId}/history` - test run history
+
+### Request headers and auth chaining (batch: `POST /projects/{projectId}/tests/run`)
+
+- **`requestHeadersJson`** — JSON object of outbound request headers, e.g. `{"Authorization":"{{token}}","Content-Type":"application/json"}`.
+- **`{{variable}}`** — placeholders in header values and in **`requestBody`** are replaced from the batch context (filled by earlier steps in the same run).
+- **`captureJsonPath`** + **`captureVariableName`** — after a **successful** response, the service reads this JSONPath from the response body and stores `String.valueOf(...)` under the given variable name for later steps.
+- **`runOrder`** — ascending execution order when running all tests (lower runs first). Tie-breaker: test `id`.
+
+Single-test execution (`POST /tests/{testId}/run`) uses an **empty** variable map, so placeholders are not filled from other tests.
+
+#### Example (login → booking)
+
+Project `baseUrl`: `https://automationintesting.online`
+
+**Test A — login (`runOrder`: 0)** — assert `200` and that the body mentions `token`, then capture `$.token` into variable `token`:
+
+```json
+{
+  "name": "Login",
+  "method": "POST",
+  "endpoint": "/api/auth/login",
+  "requestBody": "{\"username\":\"admin\",\"password\":\"password\"}",
+  "expectedStatus": 200,
+  "expectedResponseBody": "\"token\"",
+  "runOrder": 0,
+  "captureJsonPath": "$.token",
+  "captureVariableName": "token"
+}
+```
+
+**Test B — booking (`runOrder`: 1)** — send the token as a cookie (adjust header names to match your API):
+
+```json
+{
+  "name": "Create booking",
+  "method": "POST",
+  "endpoint": "/api/booking",
+  "requestHeadersJson": "{\"Cookie\":\"token={{token}}\",\"Content-Type\":\"application/json\"}",
+  "requestBody": "{\"roomid\":1,\"firstname\":\"ivan\",\"lastname\":\"ivanov\",\"depositpaid\":false,\"bookingdates\":{\"checkin\":\"2026-05-05\",\"checkout\":\"2026-05-06\"},\"email\":\"ivan1Ivanov@gmail.com\",\"phone\":\"+12233331112\"}",
+  "expectedStatus": 201,
+  "runOrder": 1
+}
+```
+
+If your API expects the raw token in `Authorization` instead, use e.g. `"requestHeadersJson": "{\"Authorization\":\"{{token}}\"}"`.
 
 ## Demo Scenario (3-5 minutes)
 

@@ -7,6 +7,7 @@ import com.example.apitestingservice.entity.Project;
 import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.repository.ApiTestRepository;
 import com.example.apitestingservice.repository.ProjectRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +31,9 @@ class ApiTestServiceTest {
 
     @Mock
     private ProjectRepository projectRepository;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private ApiTestService apiTestService;
@@ -155,7 +159,11 @@ class ApiTestServiceTest {
                 "Content-Type",
                 "application/json",
                 1_000L,
-                expectedStatus
+                expectedStatus,
+                null,
+                null,
+                null,
+                null
         );
     }
 }

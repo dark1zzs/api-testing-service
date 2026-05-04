@@ -31,6 +31,27 @@ public class ApiTest {
     @Lob
     private String requestBody;
 
+    /**
+     * Optional JSON object of request header name → value, e.g. {"Authorization":"{{token}}"}.
+     * Values may contain {@code {{var}}} placeholders filled during a project batch run.
+     */
+    @Lob
+    private String requestHeadersJson;
+
+    /**
+     * When set (with {@link #captureVariableName}), a successful response body is read at this JSONPath
+     * and stored into the batch run context under {@link #captureVariableName}.
+     */
+    private String captureJsonPath;
+
+    private String captureVariableName;
+
+    /**
+     * Lower values run first within a project when using "run all tests".
+     */
+    @Column(nullable = false)
+    private int runOrder;
+
     @Lob
     private String expectedResponseBody;
 
@@ -50,5 +71,6 @@ public class ApiTest {
     private Project project;
 
     public ApiTest() {
+        this.runOrder = 0;
     }
 }

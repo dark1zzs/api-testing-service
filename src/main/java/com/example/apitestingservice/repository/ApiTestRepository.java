@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface ApiTestRepository extends JpaRepository<ApiTest, Long> {
-    List<ApiTest> findByProjectId(Long projectId);
+    List<ApiTest> findByProjectIdOrderByRunOrderAscIdAsc(Long projectId);
+
     Optional<ApiTest> findByIdAndProjectId(Long id, Long projectId);
 }

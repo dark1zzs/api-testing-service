@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -211,6 +212,36 @@ class ApiTestExecutorTest {
     }
 
     @Test
+    void shouldSendConfiguredRequestHeaders() {
+        server.createContext("/secure", exchange -> {
+            String auth = exchange.getRequestHeaders().getFirst("Authorization");
+            int status = "token-abc".equals(auth) ? 200 : 401;
+            send(exchange, status, "{}");
+        });
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                new ApiTestExecutionRequest(
+                        baseUrl(),
+                        "/secure",
+                        "GET",
+                        null,
+                        Map.of("Authorization", "token-abc"),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        200
+                )
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+    }
+
+    @Test
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 
@@ -246,6 +277,7 @@ class ApiTestExecutorTest {
                 null,
                 null,
                 null,
+                null,
                 expectedStatus
         );
     }
@@ -257,6 +289,7 @@ class ApiTestExecutorTest {
                 baseUrl(),
                 "/profile",
                 "GET",
+                null,
                 null,
                 expectedResponseBody,
                 null,
@@ -277,6 +310,7 @@ class ApiTestExecutorTest {
                 "GET",
                 null,
                 null,
+                null,
                 "$.userId",
                 expectedJsonValue,
                 null,
@@ -291,6 +325,7 @@ class ApiTestExecutorTest {
                 baseUrl(),
                 "/headers",
                 "GET",
+                null,
                 null,
                 null,
                 null,
@@ -310,6 +345,7 @@ class ApiTestExecutorTest {
                 baseUrl(),
                 endpoint,
                 "GET",
+                null,
                 null,
                 null,
                 null,

@@ -25,6 +25,14 @@ export type ApiTestRequest = {
   expectedHeaderValue?: string | null
   maxResponseTimeMs?: number | null
   expectedStatus: number
+  /** Lower runs first when using "Run all tests". */
+  runOrder?: number | null
+  /** JSON object: header name → value. Use `{{var}}` for values captured earlier in the same batch. */
+  requestHeadersJson?: string | null
+  /** After a successful run, read this JSONPath from the response body. */
+  captureJsonPath?: string | null
+  /** Store captured value under this name for later tests in the same batch. */
+  captureVariableName?: string | null
 }
 
 export type ApiTestResponse = ApiTestRequest & {

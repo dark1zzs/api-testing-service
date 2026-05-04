@@ -52,6 +52,10 @@ class ApiTestControllerWebMvcTest {
                 "PUT",
                 "/api/users/1",
                 "{\"name\":\"Alice\"}",
+                null,
+                0,
+                null,
+                null,
                 "{\"name\":\"Alice\"}",
                 "$.name",
                 "Alice",
@@ -87,6 +91,10 @@ class ApiTestControllerWebMvcTest {
                 "KEY-1",
                 "PATCH",
                 "",
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -150,7 +158,11 @@ class ApiTestControllerWebMvcTest {
                 "Content-Type",
                 "application/json",
                 1000L,
-                200
+                200,
+                null,
+                null,
+                null,
+                null
         );
     }
 }

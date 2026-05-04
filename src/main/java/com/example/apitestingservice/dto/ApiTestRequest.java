@@ -19,6 +19,10 @@ public record ApiTestRequest(
         String expectedHeaderName,
         String expectedHeaderValue,
         Long maxResponseTimeMs,
-        @NotNull Integer expectedStatus
+        @NotNull Integer expectedStatus,
+        Integer runOrder,
+        String requestHeadersJson,
+        String captureJsonPath,
+        String captureVariableName
 ) {
 }

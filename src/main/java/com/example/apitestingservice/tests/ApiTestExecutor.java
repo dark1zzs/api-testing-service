@@ -2,6 +2,7 @@ package com.example.apitestingservice.tests;
 
 import com.example.apitestingservice.model.ApiTestExecutionRequest;
 import com.example.apitestingservice.model.ExecutionResult;
+import com.example.apitestingservice.util.JsonPaths;
 import io.restassured.path.json.JsonPath;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestClientException;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Set;
 
 @Component
@@ -39,9 +41,28 @@ public class ApiTestExecutor {
                     .method(httpMethod)
                     .uri(uri);
 
-            RestClient.RequestHeadersSpec<?> requestHeadersSpec = hasRequestBody(executionRequest.requestBody())
-                    ? requestSpec.contentType(MediaType.APPLICATION_JSON).body(executionRequest.requestBody())
-                    : requestSpec;
+            Map<String, String> requestHeaders = executionRequest.requestHeaders() != null
+                    ? executionRequest.requestHeaders()
+                    : Map.of();
+
+            for (var entry : requestHeaders.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    requestSpec = requestSpec.header(entry.getKey(), entry.getValue());
+                }
+            }
+
+            RestClient.RequestHeadersSpec<?> requestHeadersSpec;
+            if (hasRequestBody(executionRequest.requestBody())) {
+                if (hasExplicitContentType(requestHeaders)) {
+                    requestHeadersSpec = requestSpec.body(executionRequest.requestBody());
+                } else {
+                    requestHeadersSpec = requestSpec
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(executionRequest.requestBody());
+                }
+            } else {
+                requestHeadersSpec = requestSpec;
+            }
 
             ResponseEntity<String> response = requestHeadersSpec.exchange((request, clientResponse) -> {
                 String responseBody = new String(
@@ -146,6 +167,15 @@ public class ApiTestExecutor {
         return requestBody != null && !requestBody.isBlank();
     }
 
+    private boolean hasExplicitContentType(Map<String, String> headers) {
+        for (String key : headers.keySet()) {
+            if (key != null && key.equalsIgnoreCase("Content-Type")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private String buildErrorMessage(
             int expectedStatus,
             int actualStatus,
@@ -211,7 +241,7 @@ public class ApiTestExecutor {
         }
 
         try {
-            Object actualValue = JsonPath.from(actualResponseBody).get(normalizeJsonPath(expectedJsonPath));
+            Object actualValue = JsonPath.from(actualResponseBody).get(JsonPaths.normalizeJsonPath(expectedJsonPath));
 
             if (actualValue == null) {
                 return "JSONPath " + expectedJsonPath + " was not found in response body";
@@ -226,20 +256,6 @@ public class ApiTestExecutor {
         } catch (Exception e) {
             return "Response body is not valid JSON or JSONPath is invalid";
         }
-    }
-
-    private String normalizeJsonPath(String jsonPath) {
-        String trimmedPath = jsonPath.trim();
-
-        if (trimmedPath.startsWith("$.")) {
-            return trimmedPath.substring(2);
-        }
-
-        if (trimmedPath.equals("$")) {
-            return "";
-        }
-
-        return trimmedPath;
     }
 
     private boolean hasHeaderExpectation(String expectedHeaderName, String expectedHeaderValue) {

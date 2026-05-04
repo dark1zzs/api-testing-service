@@ -35,6 +35,10 @@ export function TestFormPage() {
     expectedHeaderValue: '',
     maxResponseTimeMs: undefined,
     expectedStatus: 200,
+    runOrder: 0,
+    requestHeadersJson: '',
+    captureJsonPath: '',
+    captureVariableName: '',
   })
 
   const load = useCallback(async () => {
@@ -57,6 +61,10 @@ export function TestFormPage() {
         expectedHeaderValue: t.expectedHeaderValue ?? '',
         maxResponseTimeMs: t.maxResponseTimeMs ?? undefined,
         expectedStatus: t.expectedStatus,
+        runOrder: t.runOrder ?? 0,
+        requestHeadersJson: t.requestHeadersJson ?? '',
+        captureJsonPath: t.captureJsonPath ?? '',
+        captureVariableName: t.captureVariableName ?? '',
       })
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Failed to load test')
@@ -88,6 +96,10 @@ export function TestFormPage() {
       expectedHeaderValue: emptyToNull(form.expectedHeaderValue ?? ''),
       maxResponseTimeMs: maxMs === undefined || maxMs === null || String(maxMs) === '' ? null : Number(maxMs),
       expectedStatus: Number(form.expectedStatus),
+      runOrder: form.runOrder === undefined || form.runOrder === null ? 0 : Number(form.runOrder),
+      requestHeadersJson: emptyToNull(form.requestHeadersJson ?? ''),
+      captureJsonPath: emptyToNull(form.captureJsonPath ?? ''),
+      captureVariableName: emptyToNull(form.captureVariableName ?? ''),
     }
   }
 
@@ -150,6 +162,51 @@ export function TestFormPage() {
               onChange={(e) => setForm((f) => ({ ...f, testKey: e.target.value }))}
             />
           </label>
+          <label>
+            Run order (lower runs first in &quot;Run all&quot;)
+            <input
+              type="number"
+              min={0}
+              value={form.runOrder ?? 0}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, runOrder: Number(e.target.value) }))
+              }
+            />
+          </label>
+          <label>
+            Request headers (JSON object)
+            <textarea
+              rows={3}
+              className="mono"
+              placeholder='{"Authorization":"{{token}}","Content-Type":"application/json"}'
+              value={form.requestHeadersJson ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, requestHeadersJson: e.target.value }))
+              }
+            />
+          </label>
+          <div className="form-row">
+            <label>
+              Capture JSONPath (after success)
+              <input
+                placeholder="$.token"
+                value={form.captureJsonPath ?? ''}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, captureJsonPath: e.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Capture variable name
+              <input
+                placeholder="token"
+                value={form.captureVariableName ?? ''}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, captureVariableName: e.target.value }))
+                }
+              />
+            </label>
+          </div>
           <div className="form-row">
             <label>
               Method *

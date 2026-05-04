@@ -158,6 +158,7 @@ export function ProjectPage() {
               <table className="table">
                 <thead>
                   <tr>
+                    <th>Order</th>
                     <th>Name</th>
                     <th>Method</th>
                     <th>Endpoint</th>
@@ -168,6 +169,7 @@ export function ProjectPage() {
                 <tbody>
                   {tests.map((t) => (
                     <tr key={t.id}>
+                      <td>{t.runOrder ?? 0}</td>
                       <td>
                         <Link to={`/projects/${id}/tests/${t.id}`}>{t.name}</Link>
                       </td>
