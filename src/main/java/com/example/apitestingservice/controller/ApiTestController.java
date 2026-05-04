@@ -32,6 +32,25 @@ public class ApiTestController {
         return apiTestService.getTestsByProjectId(projectId);
     }
 
+    @GetMapping("/{testId}")
+    public ApiTestResponse getApiTest(@PathVariable Long projectId, @PathVariable Long testId) {
+        return apiTestService.getApiTest(projectId, testId);
+    }
+
+    @PutMapping("/{testId}")
+    public ApiTestResponse updateApiTest(
+            @PathVariable Long projectId,
+            @PathVariable Long testId,
+            @RequestBody @Valid ApiTestRequest request
+    ) {
+        return apiTestService.updateApiTest(projectId, testId, request);
+    }
+
+    @DeleteMapping("/{testId}")
+    public void deleteApiTest(@PathVariable Long projectId, @PathVariable Long testId) {
+        apiTestService.deleteApiTest(projectId, testId);
+    }
+
     @PostMapping("/run")
     public List<TestExecutionResponse> runProjectTests(@PathVariable Long projectId) {
         return testExecutionService.runProjectTests(projectId);

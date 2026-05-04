@@ -27,6 +27,57 @@ public class ApiTestService {
                 .orElseThrow(() -> new NotFoundException("Project not found"));
 
         ApiTest apiTest = new ApiTest();
+        updateApiTestFields(apiTest, request);
+        apiTest.setProject(project);
+
+        return toResponse(apiTestRepository.save(apiTest));
+    }
+
+    public List<ApiTestResponse> getTestsByProjectId(Long projectId) {
+        ensureProjectExists(projectId);
+
+        return apiTestRepository.findByProjectId(projectId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public ApiTestResponse getApiTest(Long projectId, Long testId) {
+        return toResponse(findApiTestInProject(projectId, testId));
+    }
+
+    public ApiTestResponse updateApiTest(Long projectId, Long testId, ApiTestRequest request) {
+        ApiTest apiTest = findApiTestInProject(projectId, testId);
+        updateApiTestFields(apiTest, request);
+
+        return toResponse(apiTestRepository.save(apiTest));
+    }
+
+    public void deleteApiTest(Long projectId, Long testId) {
+        ApiTest apiTest = findApiTestInProject(projectId, testId);
+        apiTestRepository.delete(apiTest);
+    }
+
+    private void ensureProjectExists(Long projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new NotFoundException("Project not found");
+        }
+    }
+
+    private ApiTest findApiTestInProject(Long projectId, Long testId) {
+        ensureProjectExists(projectId);
+
+        ApiTest apiTest = apiTestRepository.findById(testId)
+                .orElseThrow(() -> new NotFoundException("Test not found"));
+
+        if (!apiTest.getProject().getId().equals(projectId)) {
+            throw new NotFoundException("Test not found in project");
+        }
+
+        return apiTest;
+    }
+
+    private void updateApiTestFields(ApiTest apiTest, ApiTestRequest request) {
         apiTest.setName(request.name());
         apiTest.setDescription(request.description());
         apiTest.setTestKey(request.testKey());
@@ -40,16 +91,6 @@ public class ApiTestService {
         apiTest.setExpectedHeaderValue(request.expectedHeaderValue());
         apiTest.setMaxResponseTimeMs(request.maxResponseTimeMs());
         apiTest.setExpectedStatus(request.expectedStatus());
-        apiTest.setProject(project);
-
-        return toResponse(apiTestRepository.save(apiTest));
-    }
-
-    public List<ApiTestResponse> getTestsByProjectId(Long projectId) {
-        return apiTestRepository.findByProjectId(projectId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
     }
 
     private ApiTestResponse toResponse(ApiTest apiTest) {
