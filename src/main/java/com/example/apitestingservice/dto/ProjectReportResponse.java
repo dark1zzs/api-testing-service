@@ -1,6 +1,7 @@
 package com.example.apitestingservice.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ProjectReportResponse(
         Long projectId,
@@ -10,6 +11,7 @@ public record ProjectReportResponse(
         long failedTests,
         long notRunTests,
         double successRate,
-        LocalDateTime lastRunAt
+        LocalDateTime lastRunAt,
+        List<ProjectReportTestResponse> tests
 ) {
 }

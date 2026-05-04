@@ -17,7 +17,7 @@ public class TestRun {
 
     private boolean success;
     private int statusCode;
-    private long responseTimeMs;
+    private Long responseTimeMs;
     @Lob
     private String responseBody;
     private String errorMessage;

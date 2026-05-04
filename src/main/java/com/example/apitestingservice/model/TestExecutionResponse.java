@@ -7,7 +7,7 @@ public record TestExecutionResponse(
         String testName,
         boolean success,
         int statusCode,
-        long responseTimeMs,
+        Long responseTimeMs,
         String responseBody,
         String errorMessage,
         LocalDateTime executedAt

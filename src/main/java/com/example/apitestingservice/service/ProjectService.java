@@ -2,6 +2,7 @@ package com.example.apitestingservice.service;
 
 import com.example.apitestingservice.dto.ProjectRequest;
 import com.example.apitestingservice.dto.ProjectReportResponse;
+import com.example.apitestingservice.dto.ProjectReportTestResponse;
 import com.example.apitestingservice.dto.ProjectResponse;
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.Project;
@@ -75,22 +76,24 @@ public class ProjectService {
     public ProjectReportResponse getProjectReport(Long id) {
         Project project = findProjectById(id);
         List<ApiTest> tests = apiTestRepository.findByProjectId(id);
-        List<TestRun> lastRuns = tests.stream()
-                .map(test -> getLastRun(test.getId()))
-                .flatMap(Optional::stream)
+        List<ProjectReportTestResponse> testReports = tests.stream()
+                .map(this::toReportTestResponse)
+                .toList();
+        List<ProjectReportTestResponse> executedTestReports = testReports.stream()
+                .filter(testReport -> testReport.lastRunAt() != null)
                 .toList();
 
         long totalTests = tests.size();
-        long passedTests = lastRuns.stream()
-                .filter(TestRun::isSuccess)
+        long passedTests = executedTestReports.stream()
+                .filter(ProjectReportTestResponse::success)
                 .count();
-        long failedTests = lastRuns.stream()
-                .filter(testRun -> !testRun.isSuccess())
+        long failedTests = executedTestReports.stream()
+                .filter(testReport -> !testReport.success())
                 .count();
-        long notRunTests = totalTests - lastRuns.size();
+        long notRunTests = totalTests - executedTestReports.size();
         double successRate = calculateSuccessRate(passedTests, totalTests);
-        LocalDateTime lastRunAt = lastRuns.stream()
-                .map(TestRun::getExecutedAt)
+        LocalDateTime lastRunAt = executedTestReports.stream()
+                .map(ProjectReportTestResponse::lastRunAt)
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 
@@ -102,7 +105,8 @@ public class ProjectService {
                 failedTests,
                 notRunTests,
                 successRate,
-                lastRunAt
+                lastRunAt,
+                testReports
         );
     }
 
@@ -124,6 +128,38 @@ public class ProjectService {
         return testRunRepository.findByApiTestId(testId)
                 .stream()
                 .max(Comparator.comparing(TestRun::getExecutedAt));
+    }
+
+    private ProjectReportTestResponse toReportTestResponse(ApiTest test) {
+        return getLastRun(test.getId())
+                .map(testRun -> toExecutedReportTestResponse(test, testRun))
+                .orElseGet(() -> toNotRunReportTestResponse(test));
+    }
+
+    private ProjectReportTestResponse toExecutedReportTestResponse(ApiTest test, TestRun testRun) {
+        return new ProjectReportTestResponse(
+                test.getId(),
+                test.getName(),
+                test.getTestKey(),
+                testRun.isSuccess(),
+                testRun.getStatusCode(),
+                testRun.getResponseTimeMs(),
+                testRun.getErrorMessage(),
+                testRun.getExecutedAt()
+        );
+    }
+
+    private ProjectReportTestResponse toNotRunReportTestResponse(ApiTest test) {
+        return new ProjectReportTestResponse(
+                test.getId(),
+                test.getName(),
+                test.getTestKey(),
+                false,
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     private double calculateSuccessRate(long passedTests, long totalTests) {
