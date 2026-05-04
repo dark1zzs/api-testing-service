@@ -31,6 +31,9 @@ public class ApiTest {
     @Lob
     private String requestBody;
 
+    @Lob
+    private String expectedResponseBody;
+
     @NotNull
     private Integer expectedStatus;
 

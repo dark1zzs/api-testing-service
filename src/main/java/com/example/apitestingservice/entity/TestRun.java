@@ -17,6 +17,8 @@ public class TestRun {
 
     private boolean success;
     private int statusCode;
+    @Lob
+    private String responseBody;
     private String errorMessage;
 
     private LocalDateTime executedAt;

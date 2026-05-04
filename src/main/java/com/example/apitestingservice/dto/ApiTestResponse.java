@@ -8,6 +8,7 @@ public record ApiTestResponse(
         String method,
         String endpoint,
         String requestBody,
+        String expectedResponseBody,
         Integer expectedStatus,
         Long projectId
 ) {

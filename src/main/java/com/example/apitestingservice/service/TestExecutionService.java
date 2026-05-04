@@ -42,6 +42,7 @@ public class TestExecutionService {
         return new ExecutionResult(
                 testRun.isSuccess(),
                 testRun.getStatusCode(),
+                testRun.getResponseBody(),
                 testRun.getErrorMessage()
         );
     }
@@ -73,6 +74,7 @@ public class TestExecutionService {
                 test.getEndpoint(),
                 test.getMethod(),
                 test.getRequestBody(),
+                test.getExpectedResponseBody(),
                 test.getExpectedStatus()
         );
 
@@ -81,6 +83,7 @@ public class TestExecutionService {
         testRun.setApiTest(test);
         testRun.setSuccess(result.isSuccess());
         testRun.setStatusCode(result.getStatusCode());
+        testRun.setResponseBody(result.getResponseBody());
         testRun.setErrorMessage(result.getErrorMessage());
         testRun.setExecutedAt(executedAt);
 
@@ -95,6 +98,7 @@ public class TestExecutionService {
                 test.getName(),
                 testRun.isSuccess(),
                 testRun.getStatusCode(),
+                testRun.getResponseBody(),
                 testRun.getErrorMessage(),
                 testRun.getExecutedAt()
         );
@@ -109,6 +113,7 @@ public class TestExecutionService {
                 test.getName(),
                 testRun.isSuccess(),
                 testRun.getStatusCode(),
+                testRun.getResponseBody(),
                 testRun.getErrorMessage(),
                 testRun.getExecutedAt()
         );

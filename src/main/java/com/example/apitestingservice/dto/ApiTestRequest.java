@@ -13,6 +13,7 @@ public record ApiTestRequest(
         String method,
         @NotBlank String endpoint,
         String requestBody,
+        String expectedResponseBody,
         @NotNull Integer expectedStatus
 ) {
 }

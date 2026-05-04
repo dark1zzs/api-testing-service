@@ -83,6 +83,45 @@ class ApiTestExecutorTest {
     }
 
     @Test
+    void shouldTreatExpectedResponseBodyContentAsSuccessfulResult() {
+        server.createContext("/profile", exchange -> send(exchange, 200, "{\"name\":\"demo\"}"));
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/profile",
+                "GET",
+                null,
+                "\"name\":\"demo\"",
+                200
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals("{\"name\":\"demo\"}", result.getResponseBody());
+        assertNull(result.getErrorMessage());
+    }
+
+    @Test
+    void shouldFailWhenResponseBodyDoesNotContainExpectedContent() {
+        server.createContext("/profile", exchange -> send(exchange, 200, "{\"name\":\"demo\"}"));
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/profile",
+                "GET",
+                null,
+                "\"name\":\"admin\"",
+                200
+        );
+
+        assertFalse(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals("Response body does not contain expected content", result.getErrorMessage());
+    }
+
+    @Test
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 

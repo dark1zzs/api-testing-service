@@ -7,6 +7,7 @@ public record TestExecutionResponse(
         String testName,
         boolean success,
         int statusCode,
+        String responseBody,
         String errorMessage,
         LocalDateTime executedAt
 ) {

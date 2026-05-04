@@ -33,6 +33,7 @@ public class ApiTestService {
         apiTest.setMethod(request.method());
         apiTest.setEndpoint(request.endpoint());
         apiTest.setRequestBody(request.requestBody());
+        apiTest.setExpectedResponseBody(request.expectedResponseBody());
         apiTest.setExpectedStatus(request.expectedStatus());
         apiTest.setProject(project);
 
@@ -55,6 +56,7 @@ public class ApiTestService {
                 apiTest.getMethod(),
                 apiTest.getEndpoint(),
                 apiTest.getRequestBody(),
+                apiTest.getExpectedResponseBody(),
                 apiTest.getExpectedStatus(),
                 apiTest.getProject().getId()
         );

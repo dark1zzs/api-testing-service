@@ -34,6 +34,17 @@ public class ApiTestExecutor {
             String requestBody,
             Integer expectedStatus
     ) {
+        return execute(baseUrl, endpoint, method, requestBody, null, expectedStatus);
+    }
+
+    public ExecutionResult execute(
+            String baseUrl,
+            String endpoint,
+            String method,
+            String requestBody,
+            String expectedResponseBody,
+            Integer expectedStatus
+    ) {
 
         try {
             validateTestParameters(baseUrl, endpoint, method, expectedStatus);
@@ -66,13 +77,20 @@ public class ApiTestExecutor {
             }
 
             int actualStatus = response.getStatusCode().value();
-            boolean success = actualStatus == expectedStatus;
+            String actualResponseBody = response.getBody();
+            String errorMessage = buildErrorMessage(
+                    expectedStatus,
+                    actualStatus,
+                    expectedResponseBody,
+                    actualResponseBody
+            );
+            boolean success = errorMessage == null;
 
             return new ExecutionResult(
                     success,
                     actualStatus,
-                    success ? null :
-                            "Expected " + expectedStatus + ", but got " + actualStatus
+                    actualResponseBody,
+                    errorMessage
             );
 
         } catch (IllegalArgumentException e) {
@@ -132,5 +150,31 @@ public class ApiTestExecutor {
 
     private boolean hasRequestBody(String requestBody) {
         return requestBody != null && !requestBody.isBlank();
+    }
+
+    private String buildErrorMessage(
+            int expectedStatus,
+            int actualStatus,
+            String expectedResponseBody,
+            String actualResponseBody
+    ) {
+        if (actualStatus != expectedStatus) {
+            return "Expected " + expectedStatus + ", but got " + actualStatus;
+        }
+
+        if (hasExpectedResponseBody(expectedResponseBody)
+                && !containsExpectedBody(actualResponseBody, expectedResponseBody)) {
+            return "Response body does not contain expected content";
+        }
+
+        return null;
+    }
+
+    private boolean hasExpectedResponseBody(String expectedResponseBody) {
+        return expectedResponseBody != null && !expectedResponseBody.isBlank();
+    }
+
+    private boolean containsExpectedBody(String actualResponseBody, String expectedResponseBody) {
+        return actualResponseBody != null && actualResponseBody.contains(expectedResponseBody);
     }
 }

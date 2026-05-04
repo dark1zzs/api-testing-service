@@ -4,14 +4,20 @@ public class ExecutionResult {
 
     private boolean success;
     private int statusCode;
+    private String responseBody;
     private String errorMessage;
 
     public ExecutionResult() {
     }
 
     public ExecutionResult(boolean success, int statusCode, String errorMessage) {
+        this(success, statusCode, null, errorMessage);
+    }
+
+    public ExecutionResult(boolean success, int statusCode, String responseBody, String errorMessage) {
         this.success = success;
         this.statusCode = statusCode;
+        this.responseBody = responseBody;
         this.errorMessage = errorMessage;
     }
 
@@ -29,6 +35,14 @@ public class ExecutionResult {
 
     public void setStatusCode(int statusCode) {
         this.statusCode = statusCode;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
+    }
+
+    public void setResponseBody(String responseBody) {
+        this.responseBody = responseBody;
     }
 
     public String getErrorMessage() {
