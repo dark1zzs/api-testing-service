@@ -4,6 +4,7 @@ import com.example.apitestingservice.dto.TestRunResponse;
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.TestRun;
 import com.example.apitestingservice.exception.NotFoundException;
+import com.example.apitestingservice.model.ApiTestExecutionRequest;
 import com.example.apitestingservice.model.ExecutionResult;
 import com.example.apitestingservice.model.TestExecutionResponse;
 import com.example.apitestingservice.repository.ApiTestRepository;
@@ -70,19 +71,7 @@ public class TestExecutionService {
     }
 
     private TestRun executeAndSave(ApiTest test) {
-        ExecutionResult result = apiTestExecutor.execute(
-                test.getProject().getBaseUrl(),
-                test.getEndpoint(),
-                test.getMethod(),
-                test.getRequestBody(),
-                test.getExpectedResponseBody(),
-                test.getExpectedJsonPath(),
-                test.getExpectedJsonValue(),
-                test.getExpectedHeaderName(),
-                test.getExpectedHeaderValue(),
-                test.getMaxResponseTimeMs(),
-                test.getExpectedStatus()
-        );
+        ExecutionResult result = apiTestExecutor.execute(toExecutionRequest(test));
 
         LocalDateTime executedAt = LocalDateTime.now();
         TestRun testRun = new TestRun();
@@ -95,6 +84,22 @@ public class TestExecutionService {
         testRun.setExecutedAt(executedAt);
 
         return testRunRepository.save(testRun);
+    }
+
+    private ApiTestExecutionRequest toExecutionRequest(ApiTest test) {
+        return new ApiTestExecutionRequest(
+                test.getProject().getBaseUrl(),
+                test.getEndpoint(),
+                test.getMethod(),
+                test.getRequestBody(),
+                test.getExpectedResponseBody(),
+                test.getExpectedJsonPath(),
+                test.getExpectedJsonValue(),
+                test.getExpectedHeaderName(),
+                test.getExpectedHeaderValue(),
+                test.getMaxResponseTimeMs(),
+                test.getExpectedStatus()
+        );
     }
 
     private TestExecutionResponse toResponse(TestRun testRun) {

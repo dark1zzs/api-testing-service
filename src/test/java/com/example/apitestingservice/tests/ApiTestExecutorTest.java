@@ -1,5 +1,6 @@
 package com.example.apitestingservice.tests;
 
+import com.example.apitestingservice.model.ApiTestExecutionRequest;
 import com.example.apitestingservice.model.ExecutionResult;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -40,7 +41,7 @@ class ApiTestExecutorTest {
         server.createContext("/missing", exchange -> send(exchange, 404, "not found"));
         server.start();
 
-        ExecutionResult result = executor.execute(baseUrl(), "/missing", "GET", 404);
+        ExecutionResult result = executor.execute(request("/missing", "GET", 404));
 
         assertTrue(result.isSuccess());
         assertEquals(404, result.getStatusCode());
@@ -55,7 +56,7 @@ class ApiTestExecutorTest {
         });
         server.start();
 
-        ExecutionResult result = executor.execute(baseUrl(), "/created", "POST", 201);
+        ExecutionResult result = executor.execute(request("/created", "POST", 201));
 
         assertTrue(result.isSuccess());
         assertEquals(201, result.getStatusCode());
@@ -71,11 +72,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/echo",
-                "POST",
-                "{\"name\":\"demo\"}",
-                201
+                request("/echo", "POST", 201, "{\"name\":\"demo\"}")
         );
 
         assertTrue(result.isSuccess());
@@ -88,12 +85,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/profile",
-                "GET",
-                null,
-                "\"name\":\"demo\"",
-                200
+                requestWithExpectedResponseBody("/profile", "\"name\":\"demo\"")
         );
 
         assertTrue(result.isSuccess());
@@ -108,12 +100,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/profile",
-                "GET",
-                null,
-                "\"name\":\"admin\"",
-                200
+                requestWithExpectedResponseBody("/profile", "\"name\":\"admin\"")
         );
 
         assertFalse(result.isSuccess());
@@ -127,14 +114,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/post",
-                "GET",
-                null,
-                null,
-                "$.userId",
-                "1",
-                200
+                requestWithExpectedJsonPath("/post", "$.userId", "1")
         );
 
         assertTrue(result.isSuccess());
@@ -148,14 +128,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/post",
-                "GET",
-                null,
-                null,
-                "$.userId",
-                "2",
-                200
+                requestWithExpectedJsonPath("/post", "$.userId", "2")
         );
 
         assertFalse(result.isSuccess());
@@ -172,16 +145,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/headers",
-                "GET",
-                null,
-                null,
-                null,
-                null,
-                "Content-Type",
-                "application/json",
-                200
+                requestWithExpectedHeader("/headers", "Content-Type", "application/json")
         );
 
         assertTrue(result.isSuccess());
@@ -198,16 +162,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/headers",
-                "GET",
-                null,
-                null,
-                null,
-                null,
-                "Content-Type",
-                "application/json",
-                200
+                requestWithExpectedHeader("/headers", "Content-Type", "application/json")
         );
 
         assertFalse(result.isSuccess());
@@ -224,17 +179,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/fast",
-                "GET",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                5_000L,
-                200
+                requestWithMaxResponseTime("/fast", 5_000L)
         );
 
         assertTrue(result.isSuccess());
@@ -256,17 +201,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                baseUrl(),
-                "/slow",
-                "GET",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                1L,
-                200
+                requestWithMaxResponseTime("/slow", 1L)
         );
 
         assertFalse(result.isSuccess());
@@ -279,7 +214,7 @@ class ApiTestExecutorTest {
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 
-        ExecutionResult result = executor.execute(baseUrl(), "/test", "BREW", 200);
+        ExecutionResult result = executor.execute(request("/test", "BREW", 200));
 
         assertFalse(result.isSuccess());
         assertEquals(0, result.getStatusCode());
@@ -288,6 +223,109 @@ class ApiTestExecutorTest {
 
     private String baseUrl() {
         return "http://localhost:" + server.getAddress().getPort();
+    }
+
+    private ApiTestExecutionRequest request(String endpoint, String method, Integer expectedStatus) {
+        return request(endpoint, method, expectedStatus, null);
+    }
+
+    private ApiTestExecutionRequest request(
+            String endpoint,
+            String method,
+            Integer expectedStatus,
+            String requestBody
+    ) {
+        return new ApiTestExecutionRequest(
+                baseUrl(),
+                endpoint,
+                method,
+                requestBody,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                expectedStatus
+        );
+    }
+
+    private ApiTestExecutionRequest requestWithExpectedResponseBody(
+            String endpoint,
+            String expectedResponseBody
+    ) {
+        return new ApiTestExecutionRequest(
+                baseUrl(),
+                endpoint,
+                "GET",
+                null,
+                expectedResponseBody,
+                null,
+                null,
+                null,
+                null,
+                null,
+                200
+        );
+    }
+
+    private ApiTestExecutionRequest requestWithExpectedJsonPath(
+            String endpoint,
+            String expectedJsonPath,
+            String expectedJsonValue
+    ) {
+        return new ApiTestExecutionRequest(
+                baseUrl(),
+                endpoint,
+                "GET",
+                null,
+                null,
+                expectedJsonPath,
+                expectedJsonValue,
+                null,
+                null,
+                null,
+                200
+        );
+    }
+
+    private ApiTestExecutionRequest requestWithExpectedHeader(
+            String endpoint,
+            String expectedHeaderName,
+            String expectedHeaderValue
+    ) {
+        return new ApiTestExecutionRequest(
+                baseUrl(),
+                endpoint,
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                expectedHeaderName,
+                expectedHeaderValue,
+                null,
+                200
+        );
+    }
+
+    private ApiTestExecutionRequest requestWithMaxResponseTime(
+            String endpoint,
+            Long maxResponseTimeMs
+    ) {
+        return new ApiTestExecutionRequest(
+                baseUrl(),
+                endpoint,
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                maxResponseTimeMs,
+                200
+        );
     }
 
     private void send(HttpExchange exchange, int status, String body) throws IOException {

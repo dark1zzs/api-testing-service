@@ -1,5 +1,6 @@
 package com.example.apitestingservice.tests;
 
+import com.example.apitestingservice.model.ApiTestExecutionRequest;
 import com.example.apitestingservice.model.ExecutionResult;
 import io.restassured.path.json.JsonPath;
 import org.springframework.http.HttpHeaders;
@@ -25,111 +26,21 @@ public class ApiTestExecutor {
         this.restClient = builder.build();
     }
 
-    public ExecutionResult execute(String baseUrl, String endpoint, String method, Integer expectedStatus) {
-        return execute(baseUrl, endpoint, method, null, expectedStatus);
-    }
-
-    public ExecutionResult execute(
-            String baseUrl,
-            String endpoint,
-            String method,
-            String requestBody,
-            Integer expectedStatus
-    ) {
-        return execute(baseUrl, endpoint, method, requestBody, null, expectedStatus);
-    }
-
-    public ExecutionResult execute(
-            String baseUrl,
-            String endpoint,
-            String method,
-            String requestBody,
-            String expectedResponseBody,
-            Integer expectedStatus
-    ) {
-        return execute(baseUrl, endpoint, method, requestBody, expectedResponseBody, null, null, expectedStatus);
-    }
-
-    public ExecutionResult execute(
-            String baseUrl,
-            String endpoint,
-            String method,
-            String requestBody,
-            String expectedResponseBody,
-            String expectedJsonPath,
-            String expectedJsonValue,
-            Integer expectedStatus
-    ) {
-        return execute(
-                baseUrl,
-                endpoint,
-                method,
-                requestBody,
-                expectedResponseBody,
-                expectedJsonPath,
-                expectedJsonValue,
-                null,
-                null,
-                null,
-                expectedStatus
-        );
-    }
-
-    public ExecutionResult execute(
-            String baseUrl,
-            String endpoint,
-            String method,
-            String requestBody,
-            String expectedResponseBody,
-            String expectedJsonPath,
-            String expectedJsonValue,
-            String expectedHeaderName,
-            String expectedHeaderValue,
-            Integer expectedStatus
-    ) {
-        return execute(
-                baseUrl,
-                endpoint,
-                method,
-                requestBody,
-                expectedResponseBody,
-                expectedJsonPath,
-                expectedJsonValue,
-                expectedHeaderName,
-                expectedHeaderValue,
-                null,
-                expectedStatus
-        );
-    }
-
-    public ExecutionResult execute(
-            String baseUrl,
-            String endpoint,
-            String method,
-            String requestBody,
-            String expectedResponseBody,
-            String expectedJsonPath,
-            String expectedJsonValue,
-            String expectedHeaderName,
-            String expectedHeaderValue,
-            Long maxResponseTimeMs,
-            Integer expectedStatus
-    ) {
-
+    public ExecutionResult execute(ApiTestExecutionRequest executionRequest) {
         long startTime = System.nanoTime();
 
         try {
-            validateTestParameters(baseUrl, endpoint, method, expectedStatus);
+            validateTestParameters(executionRequest);
 
-            URI uri = buildUri(baseUrl, endpoint);
-            HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
+            URI uri = buildUri(executionRequest.baseUrl(), executionRequest.endpoint());
+            HttpMethod httpMethod = HttpMethod.valueOf(executionRequest.method().toUpperCase());
 
             RestClient.RequestBodySpec requestSpec = restClient
                     .method(httpMethod)
                     .uri(uri);
 
-            RestClient.RequestHeadersSpec<?> requestHeadersSpec = hasRequestBody(requestBody)
-                    ? requestSpec.contentType(MediaType.APPLICATION_JSON).body(requestBody)
+            RestClient.RequestHeadersSpec<?> requestHeadersSpec = hasRequestBody(executionRequest.requestBody())
+                    ? requestSpec.contentType(MediaType.APPLICATION_JSON).body(executionRequest.requestBody())
                     : requestSpec;
 
             ResponseEntity<String> response = requestHeadersSpec.exchange((request, clientResponse) -> {
@@ -152,14 +63,14 @@ public class ApiTestExecutor {
             int actualStatus = response.getStatusCode().value();
             String actualResponseBody = response.getBody();
             String errorMessage = buildErrorMessage(
-                    expectedStatus,
+                    executionRequest.expectedStatus(),
                     actualStatus,
-                    expectedResponseBody,
-                    expectedJsonPath,
-                    expectedJsonValue,
-                    expectedHeaderName,
-                    expectedHeaderValue,
-                    maxResponseTimeMs,
+                    executionRequest.expectedResponseBody(),
+                    executionRequest.expectedJsonPath(),
+                    executionRequest.expectedJsonValue(),
+                    executionRequest.expectedHeaderName(),
+                    executionRequest.expectedHeaderValue(),
+                    executionRequest.maxResponseTimeMs(),
                     responseTimeMs,
                     response.getHeaders(),
                     actualResponseBody
@@ -201,24 +112,24 @@ public class ApiTestExecutor {
         }
     }
 
-    private void validateTestParameters(String baseUrl, String endpoint, String method, Integer expectedStatus) {
-        if (baseUrl == null || baseUrl.isBlank()) {
+    private void validateTestParameters(ApiTestExecutionRequest executionRequest) {
+        if (executionRequest.baseUrl() == null || executionRequest.baseUrl().isBlank()) {
             throw new IllegalArgumentException("Base URL must not be empty");
         }
 
-        if (endpoint == null || endpoint.isBlank()) {
+        if (executionRequest.endpoint() == null || executionRequest.endpoint().isBlank()) {
             throw new IllegalArgumentException("Endpoint must not be empty");
         }
 
-        if (method == null || method.isBlank()) {
+        if (executionRequest.method() == null || executionRequest.method().isBlank()) {
             throw new IllegalArgumentException("HTTP method must not be empty");
         }
 
-        if (!SUPPORTED_METHODS.contains(method.toUpperCase())) {
-            throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+        if (!SUPPORTED_METHODS.contains(executionRequest.method().toUpperCase())) {
+            throw new IllegalArgumentException("Unsupported HTTP method: " + executionRequest.method());
         }
 
-        if (expectedStatus == null) {
+        if (executionRequest.expectedStatus() == null) {
             throw new IllegalArgumentException("Expected status must not be empty");
         }
     }
