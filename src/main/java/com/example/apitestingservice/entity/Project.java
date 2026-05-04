@@ -13,17 +13,15 @@ import lombok.Setter;
 @Entity
 public class Project {
 
-    //Это сущность JPA, который будет сохраняться в базу данных как таблица project
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //идентификатор
+    private Long id;
 
     @NotBlank
-    private String name; //название проекта
+    private String name;
     @NotBlank
-    private String baseUrl; //базовый URL тестируемого API
-    private String description; //описание
+    private String baseUrl;
+    private String description;
 
     public Project() {
     }

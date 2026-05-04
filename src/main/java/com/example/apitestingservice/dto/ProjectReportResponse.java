@@ -12,6 +12,9 @@ public record ProjectReportResponse(
         long notRunTests,
         double successRate,
         LocalDateTime lastRunAt,
+        long responseTimeSampleCount,
+        Long responseTimeP50Ms,
+        Long responseTimeP95Ms,
         List<ProjectReportTestResponse> tests
 ) {
 }

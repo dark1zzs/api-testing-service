@@ -45,7 +45,7 @@ public class ApiTest {
     @NotNull
     private Integer expectedStatus;
 
-    @ManyToOne  //у одного проекта может быть много тестов
+    @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 

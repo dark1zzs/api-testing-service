@@ -11,6 +11,7 @@ import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.repository.ApiTestRepository;
 import com.example.apitestingservice.repository.ProjectRepository;
 import com.example.apitestingservice.repository.TestRunRepository;
+import com.example.apitestingservice.util.ResponseTimePercentiles;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -97,6 +98,11 @@ public class ProjectService {
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 
+        List<Long> responseTimesMs = testRunRepository.findByApiTest_Project_Id(id).stream()
+                .map(TestRun::getResponseTimeMs)
+                .toList();
+        ResponseTimePercentiles.Result latency = ResponseTimePercentiles.fromMillis(responseTimesMs);
+
         return new ProjectReportResponse(
                 project.getId(),
                 project.getName(),
@@ -106,6 +112,9 @@ public class ProjectService {
                 notRunTests,
                 successRate,
                 lastRunAt,
+                latency.sampleCount(),
+                latency.p50Ms(),
+                latency.p95Ms(),
                 testReports
         );
     }

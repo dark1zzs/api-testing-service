@@ -10,4 +10,6 @@ import java.util.List;
 public interface TestRunRepository extends JpaRepository<TestRun, Long> {
 
     List<TestRun> findByApiTestId(Long testId);
+
+    List<TestRun> findByApiTest_Project_Id(Long projectId);
 }
