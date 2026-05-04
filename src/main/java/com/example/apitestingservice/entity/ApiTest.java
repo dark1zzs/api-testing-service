@@ -28,6 +28,9 @@ public class ApiTest {
     @NotBlank
     private String endpoint;
 
+    @Lob
+    private String requestBody;
+
     @NotNull
     private Integer expectedStatus;
 

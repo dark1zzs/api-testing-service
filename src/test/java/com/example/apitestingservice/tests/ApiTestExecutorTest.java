@@ -62,6 +62,27 @@ class ApiTestExecutorTest {
     }
 
     @Test
+    void shouldSendConfiguredRequestBody() {
+        server.createContext("/echo", exchange -> {
+            String requestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            int status = "{\"name\":\"demo\"}".equals(requestBody) ? 201 : 400;
+            send(exchange, status, "");
+        });
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/echo",
+                "POST",
+                "{\"name\":\"demo\"}",
+                201
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals(201, result.getStatusCode());
+    }
+
+    @Test
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 

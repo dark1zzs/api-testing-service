@@ -2,6 +2,7 @@ package com.example.apitestingservice.tests;
 
 import com.example.apitestingservice.model.ExecutionResult;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -23,6 +24,16 @@ public class ApiTestExecutor {
     }
 
     public ExecutionResult execute(String baseUrl, String endpoint, String method, Integer expectedStatus) {
+        return execute(baseUrl, endpoint, method, null, expectedStatus);
+    }
+
+    public ExecutionResult execute(
+            String baseUrl,
+            String endpoint,
+            String method,
+            String requestBody,
+            Integer expectedStatus
+    ) {
 
         try {
             validateTestParameters(baseUrl, endpoint, method, expectedStatus);
@@ -30,20 +41,25 @@ public class ApiTestExecutor {
             URI uri = buildUri(baseUrl, endpoint);
             HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
 
-            ResponseEntity<String> response = restClient
+            RestClient.RequestBodySpec requestSpec = restClient
                     .method(httpMethod)
-                    .uri(uri)
-                    .exchange((request, clientResponse) -> {
-                        String responseBody = new String(
-                                clientResponse.getBody().readAllBytes(),
-                                StandardCharsets.UTF_8
-                        );
+                    .uri(uri);
 
-                        return ResponseEntity
-                                .status(clientResponse.getStatusCode())
-                                .headers(clientResponse.getHeaders())
-                                .body(responseBody);
-                    });
+            RestClient.RequestHeadersSpec<?> requestHeadersSpec = hasRequestBody(requestBody)
+                    ? requestSpec.contentType(MediaType.APPLICATION_JSON).body(requestBody)
+                    : requestSpec;
+
+            ResponseEntity<String> response = requestHeadersSpec.exchange((request, clientResponse) -> {
+                String responseBody = new String(
+                        clientResponse.getBody().readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+                return ResponseEntity
+                        .status(clientResponse.getStatusCode())
+                        .headers(clientResponse.getHeaders())
+                        .body(responseBody);
+            });
 
             if (response == null) {
                 return new ExecutionResult(false, 0, "Response was not received");
@@ -112,5 +128,9 @@ public class ApiTestExecutor {
                 : "/" + endpoint;
 
         return URI.create(normalizedBaseUrl + normalizedEndpoint);
+    }
+
+    private boolean hasRequestBody(String requestBody) {
+        return requestBody != null && !requestBody.isBlank();
     }
 }

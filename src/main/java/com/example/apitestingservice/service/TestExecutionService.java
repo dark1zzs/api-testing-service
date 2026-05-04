@@ -72,6 +72,7 @@ public class TestExecutionService {
                 test.getProject().getBaseUrl(),
                 test.getEndpoint(),
                 test.getMethod(),
+                test.getRequestBody(),
                 test.getExpectedStatus()
         );
 

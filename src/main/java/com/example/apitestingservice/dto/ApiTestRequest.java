@@ -12,6 +12,7 @@ public record ApiTestRequest(
         @Pattern(regexp = "GET|POST|PUT|DELETE", message = "Method must be one of: GET, POST, PUT, DELETE")
         String method,
         @NotBlank String endpoint,
+        String requestBody,
         @NotNull Integer expectedStatus
 ) {
 }
