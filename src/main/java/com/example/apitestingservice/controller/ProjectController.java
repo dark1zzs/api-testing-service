@@ -1,6 +1,7 @@
 package com.example.apitestingservice.controller;
 
 import com.example.apitestingservice.dto.ProjectRequest;
+import com.example.apitestingservice.dto.ProjectReportResponse;
 import com.example.apitestingservice.dto.ProjectResponse;
 import com.example.apitestingservice.service.ProjectService;
 import jakarta.validation.Valid;
@@ -31,6 +32,11 @@ public class ProjectController {
     @GetMapping("/{id}")
     public ProjectResponse getProjectById(@PathVariable Long id) {
         return projectService.getProjectById(id);
+    }
+
+    @GetMapping("/{id}/report")
+    public ProjectReportResponse getProjectReport(@PathVariable Long id) {
+        return projectService.getProjectReport(id);
     }
 
     @PutMapping("/{id}")
