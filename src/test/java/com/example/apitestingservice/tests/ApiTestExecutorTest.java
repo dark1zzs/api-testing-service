@@ -85,7 +85,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedResponseBody("/profile", "\"name\":\"demo\"")
+                profileRequestWithExpectedResponseBody("\"name\":\"demo\"")
         );
 
         assertTrue(result.isSuccess());
@@ -100,7 +100,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedResponseBody("/profile", "\"name\":\"admin\"")
+                profileRequestWithExpectedResponseBody("\"name\":\"admin\"")
         );
 
         assertFalse(result.isSuccess());
@@ -114,7 +114,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedJsonPath("/post", "$.userId", "1")
+                postRequestWithExpectedUserId("1")
         );
 
         assertTrue(result.isSuccess());
@@ -128,7 +128,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedJsonPath("/post", "$.userId", "2")
+                postRequestWithExpectedUserId("2")
         );
 
         assertFalse(result.isSuccess());
@@ -145,7 +145,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedHeader("/headers", "Content-Type", "application/json")
+                headersRequestWithExpectedJsonContentType()
         );
 
         assertTrue(result.isSuccess());
@@ -162,7 +162,7 @@ class ApiTestExecutorTest {
         server.start();
 
         ExecutionResult result = executor.execute(
-                requestWithExpectedHeader("/headers", "Content-Type", "application/json")
+                headersRequestWithExpectedJsonContentType()
         );
 
         assertFalse(result.isSuccess());
@@ -250,13 +250,12 @@ class ApiTestExecutorTest {
         );
     }
 
-    private ApiTestExecutionRequest requestWithExpectedResponseBody(
-            String endpoint,
+    private ApiTestExecutionRequest profileRequestWithExpectedResponseBody(
             String expectedResponseBody
     ) {
         return new ApiTestExecutionRequest(
                 baseUrl(),
-                endpoint,
+                "/profile",
                 "GET",
                 null,
                 expectedResponseBody,
@@ -269,18 +268,16 @@ class ApiTestExecutorTest {
         );
     }
 
-    private ApiTestExecutionRequest requestWithExpectedJsonPath(
-            String endpoint,
-            String expectedJsonPath,
+    private ApiTestExecutionRequest postRequestWithExpectedUserId(
             String expectedJsonValue
     ) {
         return new ApiTestExecutionRequest(
                 baseUrl(),
-                endpoint,
+                "/post",
                 "GET",
                 null,
                 null,
-                expectedJsonPath,
+                "$.userId",
                 expectedJsonValue,
                 null,
                 null,
@@ -289,21 +286,17 @@ class ApiTestExecutorTest {
         );
     }
 
-    private ApiTestExecutionRequest requestWithExpectedHeader(
-            String endpoint,
-            String expectedHeaderName,
-            String expectedHeaderValue
-    ) {
+    private ApiTestExecutionRequest headersRequestWithExpectedJsonContentType() {
         return new ApiTestExecutionRequest(
                 baseUrl(),
-                endpoint,
+                "/headers",
                 "GET",
                 null,
                 null,
                 null,
                 null,
-                expectedHeaderName,
-                expectedHeaderValue,
+                "Content-Type",
+                "application/json",
                 null,
                 200
         );

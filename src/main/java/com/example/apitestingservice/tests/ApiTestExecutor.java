@@ -56,10 +56,6 @@ public class ApiTestExecutor {
             });
             long responseTimeMs = calculateElapsedTimeMs(startTime);
 
-            if (response == null) {
-                return new ExecutionResult(false, 0, responseTimeMs, null, "Response was not received");
-            }
-
             int actualStatus = response.getStatusCode().value();
             String actualResponseBody = response.getBody();
             String errorMessage = buildErrorMessage(
