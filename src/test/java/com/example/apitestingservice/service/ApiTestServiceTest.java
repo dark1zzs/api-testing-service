@@ -16,9 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -119,7 +117,7 @@ class ApiTestServiceTest {
         ApiTestResponse response = apiTestService.createApiTest(projectId, request("Create", "POST", "/users", 201));
 
         ApiTest savedEntity = captor.getValue();
-        assertTrue(savedEntity.getProject() == project);
+        assertSame(savedEntity.getProject(), project);
         assertEquals(999L, response.id());
         assertEquals(projectId, response.projectId());
     }
