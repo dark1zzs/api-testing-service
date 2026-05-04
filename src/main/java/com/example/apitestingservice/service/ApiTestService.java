@@ -66,15 +66,8 @@ public class ApiTestService {
 
     private ApiTest findApiTestInProject(Long projectId, Long testId) {
         ensureProjectExists(projectId);
-
-        ApiTest apiTest = apiTestRepository.findById(testId)
-                .orElseThrow(() -> new NotFoundException("Test not found"));
-
-        if (!apiTest.getProject().getId().equals(projectId)) {
-            throw new NotFoundException("Test not found in project");
-        }
-
-        return apiTest;
+        return apiTestRepository.findByIdAndProjectId(testId, projectId)
+                .orElseThrow(() -> new NotFoundException("Test not found in project"));
     }
 
     private void updateApiTestFields(ApiTest apiTest, ApiTestRequest request) {
