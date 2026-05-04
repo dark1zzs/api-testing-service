@@ -9,6 +9,8 @@ public record ApiTestResponse(
         String endpoint,
         String requestBody,
         String expectedResponseBody,
+        String expectedJsonPath,
+        String expectedJsonValue,
         Integer expectedStatus,
         Long projectId
 ) {

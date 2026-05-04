@@ -1,6 +1,7 @@
 package com.example.apitestingservice.tests;
 
 import com.example.apitestingservice.model.ExecutionResult;
+import io.restassured.path.json.JsonPath;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,19 @@ public class ApiTestExecutor {
             String expectedResponseBody,
             Integer expectedStatus
     ) {
+        return execute(baseUrl, endpoint, method, requestBody, expectedResponseBody, null, null, expectedStatus);
+    }
+
+    public ExecutionResult execute(
+            String baseUrl,
+            String endpoint,
+            String method,
+            String requestBody,
+            String expectedResponseBody,
+            String expectedJsonPath,
+            String expectedJsonValue,
+            Integer expectedStatus
+    ) {
 
         try {
             validateTestParameters(baseUrl, endpoint, method, expectedStatus);
@@ -82,6 +96,8 @@ public class ApiTestExecutor {
                     expectedStatus,
                     actualStatus,
                     expectedResponseBody,
+                    expectedJsonPath,
+                    expectedJsonValue,
                     actualResponseBody
             );
             boolean success = errorMessage == null;
@@ -156,6 +172,8 @@ public class ApiTestExecutor {
             int expectedStatus,
             int actualStatus,
             String expectedResponseBody,
+            String expectedJsonPath,
+            String expectedJsonValue,
             String actualResponseBody
     ) {
         if (actualStatus != expectedStatus) {
@@ -167,6 +185,13 @@ public class ApiTestExecutor {
             return "Response body does not contain expected content";
         }
 
+        if (hasJsonPathExpectation(expectedJsonPath, expectedJsonValue)) {
+            String jsonPathError = validateJsonPath(actualResponseBody, expectedJsonPath, expectedJsonValue);
+            if (jsonPathError != null) {
+                return jsonPathError;
+            }
+        }
+
         return null;
     }
 
@@ -176,5 +201,49 @@ public class ApiTestExecutor {
 
     private boolean containsExpectedBody(String actualResponseBody, String expectedResponseBody) {
         return actualResponseBody != null && actualResponseBody.contains(expectedResponseBody);
+    }
+
+    private boolean hasJsonPathExpectation(String expectedJsonPath, String expectedJsonValue) {
+        return expectedJsonPath != null
+                && !expectedJsonPath.isBlank()
+                && expectedJsonValue != null
+                && !expectedJsonValue.isBlank();
+    }
+
+    private String validateJsonPath(String actualResponseBody, String expectedJsonPath, String expectedJsonValue) {
+        if (actualResponseBody == null || actualResponseBody.isBlank()) {
+            return "Response body is empty, JSONPath cannot be checked";
+        }
+
+        try {
+            Object actualValue = JsonPath.from(actualResponseBody).get(normalizeJsonPath(expectedJsonPath));
+
+            if (actualValue == null) {
+                return "JSONPath " + expectedJsonPath + " was not found in response body";
+            }
+
+            if (!expectedJsonValue.equals(String.valueOf(actualValue))) {
+                return "Expected JSONPath " + expectedJsonPath + " to be "
+                        + expectedJsonValue + ", but got " + actualValue;
+            }
+
+            return null;
+        } catch (Exception e) {
+            return "Response body is not valid JSON or JSONPath is invalid";
+        }
+    }
+
+    private String normalizeJsonPath(String jsonPath) {
+        String trimmedPath = jsonPath.trim();
+
+        if (trimmedPath.startsWith("$.")) {
+            return trimmedPath.substring(2);
+        }
+
+        if (trimmedPath.equals("$")) {
+            return "";
+        }
+
+        return trimmedPath;
     }
 }

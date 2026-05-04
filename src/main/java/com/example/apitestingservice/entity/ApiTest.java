@@ -34,6 +34,9 @@ public class ApiTest {
     @Lob
     private String expectedResponseBody;
 
+    private String expectedJsonPath;
+    private String expectedJsonValue;
+
     @NotNull
     private Integer expectedStatus;
 

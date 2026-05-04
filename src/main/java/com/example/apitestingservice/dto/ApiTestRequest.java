@@ -14,6 +14,8 @@ public record ApiTestRequest(
         @NotBlank String endpoint,
         String requestBody,
         String expectedResponseBody,
+        String expectedJsonPath,
+        String expectedJsonValue,
         @NotNull Integer expectedStatus
 ) {
 }

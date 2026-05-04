@@ -75,6 +75,8 @@ public class TestExecutionService {
                 test.getMethod(),
                 test.getRequestBody(),
                 test.getExpectedResponseBody(),
+                test.getExpectedJsonPath(),
+                test.getExpectedJsonValue(),
                 test.getExpectedStatus()
         );
 
