@@ -38,6 +38,7 @@ public class ApiTestService {
         apiTest.setExpectedJsonValue(request.expectedJsonValue());
         apiTest.setExpectedHeaderName(request.expectedHeaderName());
         apiTest.setExpectedHeaderValue(request.expectedHeaderValue());
+        apiTest.setMaxResponseTimeMs(request.maxResponseTimeMs());
         apiTest.setExpectedStatus(request.expectedStatus());
         apiTest.setProject(project);
 
@@ -65,6 +66,7 @@ public class ApiTestService {
                 apiTest.getExpectedJsonValue(),
                 apiTest.getExpectedHeaderName(),
                 apiTest.getExpectedHeaderValue(),
+                apiTest.getMaxResponseTimeMs(),
                 apiTest.getExpectedStatus(),
                 apiTest.getProject().getId()
         );

@@ -18,6 +18,7 @@ public record ApiTestRequest(
         String expectedJsonValue,
         String expectedHeaderName,
         String expectedHeaderValue,
+        Long maxResponseTimeMs,
         @NotNull Integer expectedStatus
 ) {
 }

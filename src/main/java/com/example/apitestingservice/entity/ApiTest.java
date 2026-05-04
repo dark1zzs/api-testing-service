@@ -40,6 +40,8 @@ public class ApiTest {
     private String expectedHeaderName;
     private String expectedHeaderValue;
 
+    private Long maxResponseTimeMs;
+
     @NotNull
     private Integer expectedStatus;
 

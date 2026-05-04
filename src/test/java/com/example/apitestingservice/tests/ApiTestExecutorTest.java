@@ -219,6 +219,63 @@ class ApiTestExecutorTest {
     }
 
     @Test
+    void shouldTreatResponseWithinExpectedTimeAsSuccessfulResult() {
+        server.createContext("/fast", exchange -> send(exchange, 200, "{}"));
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/fast",
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                5_000L,
+                200
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertTrue(result.getResponseTimeMs() >= 0);
+        assertNull(result.getErrorMessage());
+    }
+
+    @Test
+    void shouldFailWhenResponseExceedsExpectedTime() {
+        server.createContext("/slow", exchange -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            send(exchange, 200, "{}");
+        });
+        server.start();
+
+        ExecutionResult result = executor.execute(
+                baseUrl(),
+                "/slow",
+                "GET",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                1L,
+                200
+        );
+
+        assertFalse(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertTrue(result.getResponseTimeMs() >= 1);
+        assertTrue(result.getErrorMessage().startsWith("Expected response time <= 1 ms, but got "));
+    }
+
+    @Test
     void shouldReturnFailedResultForInvalidMethod() {
         server.start();
 

@@ -70,6 +70,7 @@ public class ApiTestExecutor {
                 expectedJsonValue,
                 null,
                 null,
+                null,
                 expectedStatus
         );
     }
@@ -86,6 +87,36 @@ public class ApiTestExecutor {
             String expectedHeaderValue,
             Integer expectedStatus
     ) {
+        return execute(
+                baseUrl,
+                endpoint,
+                method,
+                requestBody,
+                expectedResponseBody,
+                expectedJsonPath,
+                expectedJsonValue,
+                expectedHeaderName,
+                expectedHeaderValue,
+                null,
+                expectedStatus
+        );
+    }
+
+    public ExecutionResult execute(
+            String baseUrl,
+            String endpoint,
+            String method,
+            String requestBody,
+            String expectedResponseBody,
+            String expectedJsonPath,
+            String expectedJsonValue,
+            String expectedHeaderName,
+            String expectedHeaderValue,
+            Long maxResponseTimeMs,
+            Integer expectedStatus
+    ) {
+
+        long startTime = System.nanoTime();
 
         try {
             validateTestParameters(baseUrl, endpoint, method, expectedStatus);
@@ -112,9 +143,10 @@ public class ApiTestExecutor {
                         .headers(clientResponse.getHeaders())
                         .body(responseBody);
             });
+            long responseTimeMs = calculateElapsedTimeMs(startTime);
 
             if (response == null) {
-                return new ExecutionResult(false, 0, "Response was not received");
+                return new ExecutionResult(false, 0, responseTimeMs, null, "Response was not received");
             }
 
             int actualStatus = response.getStatusCode().value();
@@ -127,6 +159,8 @@ public class ApiTestExecutor {
                     expectedJsonValue,
                     expectedHeaderName,
                     expectedHeaderValue,
+                    maxResponseTimeMs,
+                    responseTimeMs,
                     response.getHeaders(),
                     actualResponseBody
             );
@@ -135,6 +169,7 @@ public class ApiTestExecutor {
             return new ExecutionResult(
                     success,
                     actualStatus,
+                    responseTimeMs,
                     actualResponseBody,
                     errorMessage
             );
@@ -143,18 +178,24 @@ public class ApiTestExecutor {
             return new ExecutionResult(
                     false,
                     0,
+                    calculateElapsedTimeMs(startTime),
+                    null,
                     e.getMessage()
             );
         } catch (RestClientException e) {
             return new ExecutionResult(
                     false,
                     0,
+                    calculateElapsedTimeMs(startTime),
+                    null,
                     "Request execution failed: " + e.getMessage()
             );
         } catch (Exception e) {
             return new ExecutionResult(
                     false,
                     0,
+                    calculateElapsedTimeMs(startTime),
+                    null,
                     "Unexpected execution error: " + e.getMessage()
             );
         }
@@ -206,6 +247,8 @@ public class ApiTestExecutor {
             String expectedJsonValue,
             String expectedHeaderName,
             String expectedHeaderValue,
+            Long maxResponseTimeMs,
+            long responseTimeMs,
             HttpHeaders actualHeaders,
             String actualResponseBody
     ) {
@@ -230,6 +273,11 @@ public class ApiTestExecutor {
             if (headerError != null) {
                 return headerError;
             }
+        }
+
+        if (hasMaxResponseTime(maxResponseTimeMs) && responseTimeMs > maxResponseTimeMs) {
+            return "Expected response time <= " + maxResponseTimeMs
+                    + " ms, but got " + responseTimeMs + " ms";
         }
 
         return null;
@@ -311,5 +359,13 @@ public class ApiTestExecutor {
         }
 
         return null;
+    }
+
+    private boolean hasMaxResponseTime(Long maxResponseTimeMs) {
+        return maxResponseTimeMs != null && maxResponseTimeMs > 0;
+    }
+
+    private long calculateElapsedTimeMs(long startTime) {
+        return (System.nanoTime() - startTime) / 1_000_000;
     }
 }

@@ -8,6 +8,7 @@ public record TestRunResponse(
         String testName,
         boolean success,
         int statusCode,
+        long responseTimeMs,
         String responseBody,
         String errorMessage,
         LocalDateTime executedAt
