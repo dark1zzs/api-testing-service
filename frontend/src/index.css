@@ -131,7 +131,20 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: flex-start;
+  align-items: center;
+}
+
+.project-actions .btn {
+  min-width: 118px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.project-actions .btn-primary {
+  min-width: 150px;
 }
 
 .card {
@@ -256,9 +269,43 @@ h2 {
   padding-right: 0.75rem;
 }
 
+.grouped-tests-table {
+  table-layout: fixed;
+}
+
+.grouped-tests-table .col-order {
+  width: 7%;
+}
+
+.grouped-tests-table .col-name {
+  width: 30%;
+}
+
+.grouped-tests-table .col-method {
+  width: 9%;
+}
+
+.grouped-tests-table .col-endpoint {
+  width: 22%;
+}
+
+.grouped-tests-table .col-expected {
+  width: 10%;
+}
+
+.grouped-tests-table .col-actions {
+  width: 22%;
+}
+
 .actions {
   white-space: nowrap;
   text-align: right;
+}
+
+.grouped-tests-table td.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
 }
 
 .btn {

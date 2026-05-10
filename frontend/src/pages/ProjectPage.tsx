@@ -187,7 +187,7 @@ export function ProjectPage() {
               <h1>{project.name}</h1>
               {project.description ? <p>{project.description}</p> : null}
             </div>
-            <div className="page-actions">
+            <div className="page-actions project-actions">
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -327,7 +327,15 @@ export function ProjectPage() {
                             <strong>{storyGroup.story}</strong>
                             <em>{storyGroup.tests.length}</em>
                           </summary>
-                          <table className="table">
+                          <table className="table grouped-tests-table">
+                            <colgroup>
+                              <col className="col-order" />
+                              <col className="col-name" />
+                              <col className="col-method" />
+                              <col className="col-endpoint" />
+                              <col className="col-expected" />
+                              <col className="col-actions" />
+                            </colgroup>
                             <thead>
                               <tr>
                                 <th>{t('tests.order')}</th>
