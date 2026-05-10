@@ -5,6 +5,8 @@ public record ApiTestResponse(
         String name,
         String description,
         String testKey,
+        String feature,
+        String story,
         String method,
         String endpoint,
         String requestBody,

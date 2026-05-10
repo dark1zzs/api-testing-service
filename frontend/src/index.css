@@ -179,6 +179,83 @@ h2 {
   font-weight: 500;
 }
 
+.test-groups,
+.story-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.test-folder,
+.story-folder {
+  border: 1px solid #232836;
+  border-radius: 8px;
+  background: #10141e;
+  overflow: hidden;
+}
+
+.test-folder > summary,
+.story-folder > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.65rem 0.75rem;
+  list-style: none;
+}
+
+.test-folder > summary::-webkit-details-marker,
+.story-folder > summary::-webkit-details-marker {
+  display: none;
+}
+
+.test-folder > summary::before,
+.story-folder > summary::before {
+  content: ">";
+  color: #7ab8ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  transition: transform 0.15s ease;
+}
+
+.test-folder[open] > summary::before,
+.story-folder[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.test-folder summary span,
+.story-folder summary span {
+  color: #8b95a8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.test-folder summary strong,
+.story-folder summary strong {
+  font-size: 0.95rem;
+}
+
+.story-folder summary em {
+  margin-left: auto;
+  color: #8b95a8;
+  font-style: normal;
+  font-size: 0.8rem;
+}
+
+.story-groups {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.story-folder .table th:first-child,
+.story-folder .table td:first-child {
+  padding-left: 0.75rem;
+}
+
+.story-folder .table th:last-child,
+.story-folder .table td:last-child {
+  padding-right: 0.75rem;
+}
+
 .actions {
   white-space: nowrap;
   text-align: right;

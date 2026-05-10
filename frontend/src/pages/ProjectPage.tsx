@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as projectsApi from '../api/projects'
 import * as testsApi from '../api/tests'
@@ -6,6 +6,42 @@ import { ApiError } from '../api/http'
 import type { ApiTestResponse, ProjectResponse, TestExecutionResponse } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { useI18n } from '../i18n'
+
+type StoryGroup = {
+  story: string
+  tests: ApiTestResponse[]
+}
+
+type FeatureGroup = {
+  feature: string
+  stories: StoryGroup[]
+}
+
+function groupTestsByFeatureAndStory(
+  tests: ApiTestResponse[],
+  withoutFeature: string,
+  withoutStory: string,
+): FeatureGroup[] {
+  const features = new Map<string, Map<string, ApiTestResponse[]>>()
+
+  tests.forEach((test) => {
+    const feature = test.feature?.trim() || withoutFeature
+    const story = test.story?.trim() || withoutStory
+    if (!features.has(feature)) {
+      features.set(feature, new Map())
+    }
+    const stories = features.get(feature)!
+    stories.set(story, [...(stories.get(story) ?? []), test])
+  })
+
+  return [...features.entries()].map(([feature, stories]) => ({
+    feature,
+    stories: [...stories.entries()].map(([story, groupedTests]) => ({
+      story,
+      tests: groupedTests,
+    })),
+  }))
+}
 
 export function ProjectPage() {
   const { t } = useI18n()
@@ -19,6 +55,15 @@ export function ProjectPage() {
   const [error, setError] = useState<string | null>(null)
   const [runBusy, setRunBusy] = useState(false)
   const [runAllResult, setRunAllResult] = useState<TestExecutionResponse[] | null>(null)
+  const testGroups = useMemo(
+    () =>
+      groupTestsByFeatureAndStory(
+        tests,
+        t('tests.withoutFeature'),
+        t('tests.withoutStory'),
+      ),
+    [tests, t],
+  )
 
   const load = useCallback(async () => {
     if (!Number.isFinite(id)) return
@@ -156,56 +201,85 @@ export function ProjectPage() {
             {tests.length === 0 ? (
               <p className="muted">{t('tests.empty')}</p>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>{t('tests.order')}</th>
-                    <th>{t('form.name')}</th>
-                    <th>{t('form.method').replace(' *', '')}</th>
-                    <th>Endpoint</th>
-                    <th>{t('tests.expected')}</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tests.map((test) => (
-                    <tr key={test.id}>
-                      <td>{test.runOrder ?? 0}</td>
-                      <td>
-                        <Link to={`/projects/${id}/tests/${test.id}`}>{test.name}</Link>
-                      </td>
-                      <td>
-                        <span className="pill">{test.method}</span>
-                      </td>
-                      <td className="mono small">{test.endpoint}</td>
-                      <td>{test.expectedStatus}</td>
-                      <td className="actions">
-                        <button
-                          type="button"
-                          className="btn btn-ghost"
-                          onClick={() => void runOne(test.id)}
+              <div className="test-groups">
+                {testGroups.map((featureGroup) => (
+                  <details className="test-folder" key={featureGroup.feature} open>
+                    <summary>
+                      <span>{t('tests.feature')}</span>
+                      <strong>{featureGroup.feature}</strong>
+                    </summary>
+                    <div className="story-groups">
+                      {featureGroup.stories.map((storyGroup) => (
+                        <details
+                          className="story-folder"
+                          key={`${featureGroup.feature}-${storyGroup.story}`}
+                          open
                         >
-                          {t('actions.run')}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          onClick={() => navigate(`/projects/${id}/tests/${test.id}/edit`)}
-                        >
-                          {t('actions.edit')}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger"
-                          onClick={() => void removeTest(test.id, test.name)}
-                        >
-                          {t('actions.delete')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          <summary>
+                            <span>{t('tests.story')}</span>
+                            <strong>{storyGroup.story}</strong>
+                            <em>{storyGroup.tests.length}</em>
+                          </summary>
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th>{t('tests.order')}</th>
+                                <th>{t('form.name')}</th>
+                                <th>{t('form.method').replace(' *', '')}</th>
+                                <th>Endpoint</th>
+                                <th>{t('tests.expected')}</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {storyGroup.tests.map((test) => (
+                                <tr key={test.id}>
+                                  <td>{test.runOrder ?? 0}</td>
+                                  <td>
+                                    <Link to={`/projects/${id}/tests/${test.id}`}>
+                                      {test.name}
+                                    </Link>
+                                  </td>
+                                  <td>
+                                    <span className="pill">{test.method}</span>
+                                  </td>
+                                  <td className="mono small">{test.endpoint}</td>
+                                  <td>{test.expectedStatus}</td>
+                                  <td className="actions">
+                                    <button
+                                      type="button"
+                                      className="btn btn-ghost"
+                                      onClick={() => void runOne(test.id)}
+                                    >
+                                      {t('actions.run')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-secondary"
+                                      onClick={() =>
+                                        navigate(`/projects/${id}/tests/${test.id}/edit`)
+                                      }
+                                    >
+                                      {t('actions.edit')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger"
+                                      onClick={() => void removeTest(test.id, test.name)}
+                                    >
+                                      {t('actions.delete')}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </details>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
             )}
           </section>
         </>

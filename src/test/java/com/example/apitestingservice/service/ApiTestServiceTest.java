@@ -150,6 +150,8 @@ class ApiTestServiceTest {
                 name,
                 "description",
                 "test-key",
+                "Users",
+                "Profile",
                 method,
                 endpoint,
                 "{\"a\":1}",

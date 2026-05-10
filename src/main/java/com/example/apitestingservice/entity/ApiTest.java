@@ -20,6 +20,8 @@ public class ApiTest {
     private String name;
     private String description;
     private String testKey;
+    private String feature;
+    private String story;
 
     @NotBlank
     @Pattern(regexp = "GET|POST|PUT|DELETE", message = "Method must be one of: GET, POST, PUT, DELETE")

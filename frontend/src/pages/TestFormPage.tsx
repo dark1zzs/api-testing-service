@@ -27,6 +27,8 @@ export function TestFormPage() {
     name: '',
     description: '',
     testKey: '',
+    feature: '',
+    story: '',
     method: 'GET',
     endpoint: '',
     requestBody: '',
@@ -53,6 +55,8 @@ export function TestFormPage() {
         name: t.name,
         description: t.description ?? '',
         testKey: t.testKey ?? '',
+        feature: t.feature ?? '',
+        story: t.story ?? '',
         method: t.method,
         endpoint: t.endpoint,
         requestBody: t.requestBody ?? '',
@@ -88,6 +92,8 @@ export function TestFormPage() {
       name: form.name.trim(),
       description: emptyToNull(form.description ?? ''),
       testKey: emptyToNull(form.testKey ?? ''),
+      feature: emptyToNull(form.feature ?? ''),
+      story: emptyToNull(form.story ?? ''),
       method: form.method,
       endpoint: form.endpoint.trim(),
       requestBody: emptyToNull(form.requestBody ?? ''),
@@ -164,6 +170,24 @@ export function TestFormPage() {
               onChange={(e) => setForm((f) => ({ ...f, testKey: e.target.value }))}
             />
           </label>
+          <div className="form-row">
+            <label>
+              {t('form.feature')}
+              <input
+                placeholder="Users"
+                value={form.feature ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, feature: e.target.value }))}
+              />
+            </label>
+            <label>
+              {t('form.story')}
+              <input
+                placeholder="Profile"
+                value={form.story ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, story: e.target.value }))}
+              />
+            </label>
+          </div>
           <label>
             {t('form.runOrder')}
             <input

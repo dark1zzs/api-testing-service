@@ -15,6 +15,8 @@ export type ApiTestRequest = {
   name: string
   description?: string | null
   testKey?: string | null
+  feature?: string | null
+  story?: string | null
   method: string
   endpoint: string
   requestBody?: string | null

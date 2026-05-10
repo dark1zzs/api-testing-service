@@ -49,9 +49,11 @@ type DictionaryKey =
   | 'form.maxResponseTime'
   | 'form.method'
   | 'form.name'
+  | 'form.feature'
   | 'form.requestBody'
   | 'form.requestHeaders'
   | 'form.runOrder'
+  | 'form.story'
   | 'form.testKey'
   | 'nav.project'
   | 'nav.projects'
@@ -98,8 +100,12 @@ type DictionaryKey =
   | 'test.success'
   | 'tests.empty'
   | 'tests.expected'
+  | 'tests.feature'
   | 'tests.order'
+  | 'tests.story'
   | 'tests.title'
+  | 'tests.withoutFeature'
+  | 'tests.withoutStory'
 
 type Dictionary = Record<DictionaryKey, string>
 
@@ -149,9 +155,11 @@ const dictionaries: Record<Language, Dictionary> = {
     'form.maxResponseTime': 'Максимальное время ответа (мс)',
     'form.method': 'Метод *',
     'form.name': 'Название *',
+    'form.feature': 'Feature',
     'form.requestBody': 'Тело запроса',
     'form.requestHeaders': 'Заголовки запроса (JSON)',
     'form.runOrder': 'Порядок запуска (меньшее значение запускается раньше)',
+    'form.story': 'Story',
     'form.testKey': 'Ключ теста',
     'nav.project': 'Проект',
     'nav.projects': 'Проекты',
@@ -199,8 +207,12 @@ const dictionaries: Record<Language, Dictionary> = {
     'test.success': 'Успех',
     'tests.empty': 'Тестов пока нет.',
     'tests.expected': 'Ожидаемый статус',
+    'tests.feature': 'Feature',
     'tests.order': 'Порядок',
+    'tests.story': 'Story',
     'tests.title': 'Тесты',
+    'tests.withoutFeature': 'Без feature',
+    'tests.withoutStory': 'Без story',
   },
   en: {
     'actions.cancel': 'Cancel',
@@ -247,9 +259,11 @@ const dictionaries: Record<Language, Dictionary> = {
     'form.maxResponseTime': 'Max response time (ms)',
     'form.method': 'Method *',
     'form.name': 'Name *',
+    'form.feature': 'Feature',
     'form.requestBody': 'Request body',
     'form.requestHeaders': 'Request headers (JSON)',
     'form.runOrder': 'Run order (lower runs first)',
+    'form.story': 'Story',
     'form.testKey': 'Test key',
     'nav.project': 'Project',
     'nav.projects': 'Projects',
@@ -297,8 +311,12 @@ const dictionaries: Record<Language, Dictionary> = {
     'test.success': 'Success',
     'tests.empty': 'No tests yet.',
     'tests.expected': 'Expected',
+    'tests.feature': 'Feature',
     'tests.order': 'Order',
+    'tests.story': 'Story',
     'tests.title': 'Tests',
+    'tests.withoutFeature': 'No feature',
+    'tests.withoutStory': 'No story',
   },
 }
 

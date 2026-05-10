@@ -8,6 +8,8 @@ public record ApiTestRequest(
         @NotBlank String name,
         String description,
         String testKey,
+        String feature,
+        String story,
         @NotBlank
         @Pattern(regexp = "GET|POST|PUT|DELETE", message = "Method must be one of: GET, POST, PUT, DELETE")
         String method,

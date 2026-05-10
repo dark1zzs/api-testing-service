@@ -121,6 +121,8 @@ public class ApiTestService {
         apiTest.setName(request.name());
         apiTest.setDescription(request.description());
         apiTest.setTestKey(request.testKey());
+        apiTest.setFeature(blankToNull(request.feature()));
+        apiTest.setStory(blankToNull(request.story()));
         apiTest.setMethod(request.method());
         apiTest.setEndpoint(request.endpoint());
         apiTest.setRequestBody(request.requestBody());
@@ -150,6 +152,8 @@ public class ApiTestService {
                 apiTest.getName(),
                 apiTest.getDescription(),
                 apiTest.getTestKey(),
+                apiTest.getFeature(),
+                apiTest.getStory(),
                 apiTest.getMethod(),
                 apiTest.getEndpoint(),
                 apiTest.getRequestBody(),
