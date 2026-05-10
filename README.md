@@ -1,295 +1,283 @@
-# API Testing Service (Diploma MVP)
+# API Testing Service
 
-Backend service for automated API testing, similar to a lightweight Postman/Newman-style runner:
-- create a project with a `baseUrl`;
-- define API tests inside the project;
-- run a single test or all tests in the project;
-- persist run history;
-- build a project-level quality report.
+Сервис для автоматизации API-тестирования, разработанный в рамках дипломного проекта.
 
-## Stack
+Приложение позволяет:
+- создавать проекты для тестируемых веб-сервисов;
+- хранить базовый URL проекта;
+- создавать API-тесты внутри проекта;
+- группировать тесты по `Feature` и `Story`;
+- запускать один тест или все тесты проекта;
+- сохранять историю запусков;
+- переиспользовать токены и другие значения между тестами в рамках общего прогона;
+- смотреть BI-отчет по проекту с тестовыми метриками и диаграммами.
+
+## Технологии
 
 - Java 21
-- Spring Boot (Web MVC, Data JPA, Validation)
-- H2 database
-- springdoc-openapi (Swagger UI)
-- React 19 + TypeScript + Vite (`frontend/`)
+- Spring Boot
+- Spring Web MVC
+- Spring Data JPA
+- Bean Validation
+- H2 Database
+- springdoc-openapi / Swagger UI
+- React 19
+- TypeScript
+- Vite
 
-### Frontend (monorepo)
+## Структура проекта
 
-The UI lives in `frontend/` (Vite + React + TypeScript + React Router). It calls the Spring API using `VITE_API_BASE` (default `http://localhost:8080` in code if unset).
+- `src/main/java` — backend-часть приложения.
+- `src/test/java` — автотесты backend-логики.
+- `frontend/` — frontend-часть на React + TypeScript.
+- `docs/` — дополнительные материалы для диплома, например схема классов.
 
-**CORS** for local dev is enabled for `http://localhost:*` and `http://127.0.0.1:*` (see `WebConfig`). In production, narrow `allowedOriginPatterns` to your real domain.
-
-Run the UI (with the backend already on port 8080):
-
-```bash
-cd frontend
-cp .env.example .env.development   # optional; default base URL works without file
-npm install
-npm run dev
-```
-
-Then open the URL printed by Vite (usually `http://localhost:5173`).
-
-## Run (backend)
+## Запуск backend
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Useful URLs after startup:
+После запуска доступны:
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-- H2 console: `http://localhost:8080/h2-console`
+- H2 Console: `http://localhost:8080/h2-console`
 
-## Main Endpoints
+## Запуск frontend
 
-### Projects
-- `POST /projects` - create project
-- `GET /projects` - list projects
-- `GET /projects/{id}` - get project
-- `PUT /projects/{id}` - update project
-- `DELETE /projects/{id}` - delete project
-- `GET /projects/{id}/report` - project report
+Backend должен быть запущен на `http://localhost:8080`.
 
-### API Tests (inside project)
-- `POST /projects/{projectId}/tests` - create test
-- `GET /projects/{projectId}/tests` - list tests in project
-- `GET /projects/{projectId}/tests/{testId}` - get test
-- `PUT /projects/{projectId}/tests/{testId}` - update test
-- `DELETE /projects/{projectId}/tests/{testId}` - delete test (`204 No Content`)
-- `POST /projects/{projectId}/tests/run` - run all tests in project
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Test Execution / History
-- `POST /tests/{testId}/run` - run one test
-- `GET /tests/{testId}/history` - test run history
+После запуска Vite покажет адрес frontend-приложения. Обычно это:
 
-### Request headers and auth chaining (batch: `POST /projects/{projectId}/tests/run`)
+```text
+http://localhost:5173
+```
 
-- **`requestHeadersJson`** — JSON object of outbound request headers, e.g. `{"Authorization":"{{token}}","Content-Type":"application/json"}`.
-- **`{{variable}}`** — placeholders in header values and in **`requestBody`** are replaced from the batch context (filled by earlier steps in the same run).
-- **`captureJsonPath`** + **`captureVariableName`** — after a **successful** response, the service reads this JSONPath from the response body and stores `String.valueOf(...)` under the given variable name for later steps.
-- **`runOrder`** — ascending execution order when running all tests (lower runs first). Tie-breaker: test `id`.
+Чтобы остановить frontend, нажмите `Ctrl + C` в терминале, где он запущен.
 
-Single-test execution (`POST /tests/{testId}/run`) uses an **empty** variable map, so placeholders are not filled from other tests.
+## Основные возможности
 
-#### Example (login → booking)
+### Проекты
 
-Project `baseUrl`: `https://automationintesting.online`
+Проект описывает тестируемый API.
 
-**Test A — login (`runOrder`: 0)** — assert `200` and that the body mentions `token`, then capture `$.token` into variable `token`:
+В проекте хранятся:
+- название;
+- базовый URL;
+- описание.
+
+Проект можно создать, посмотреть, изменить и удалить.
+
+### API-тесты
+
+API-тест описывает проверку одной ручки backend-сервиса.
+
+В тесте можно указать:
+- `Feature` — функциональная область;
+- `Story` — сценарий внутри функциональной области;
+- HTTP-метод;
+- endpoint;
+- тело запроса;
+- ожидаемый HTTP-статус;
+- ожидаемый фрагмент тела ответа;
+- JSONPath-проверку;
+- проверку заголовка;
+- максимальное время ответа;
+- порядок запуска;
+- заголовки запроса;
+- правило для сохранения значения из ответа.
+
+### Feature / Story
+
+Тесты на странице проекта группируются по структуре:
+
+```text
+Project -> Feature -> Story -> ApiTest
+```
+
+Например:
+
+```text
+JSONPlaceholder API
+└── Users
+    └── Profile
+        └── Получение списка пользователей
+```
+
+Если у теста не указаны `Feature` или `Story`, он попадает в группу `Без feature` / `Без story`.
+
+### Запуск тестов
+
+Можно запустить:
+- один конкретный тест;
+- все тесты проекта.
+
+При запуске всех тестов сервис выполняет их по `runOrder`. Если порядок одинаковый, используется id теста.
+
+### Передача токена между тестами
+
+Для авторизации не нужно вручную копировать токен.
+
+Сценарий:
+1. Первый тест выполняет логин.
+2. Сервис извлекает токен из ответа через `captureJsonPath`.
+3. Значение сохраняется в переменную, например `token`.
+4. Следующие тесты используют `{{token}}` в заголовках или теле запроса.
+
+Пример теста логина:
 
 ```json
 {
   "name": "Login",
+  "feature": "Auth",
+  "story": "Token",
   "method": "POST",
-  "endpoint": "/api/auth/login",
+  "endpoint": "/api/login",
   "requestBody": "{\"username\":\"admin\",\"password\":\"password\"}",
   "expectedStatus": 200,
-  "expectedResponseBody": "\"token\"",
   "runOrder": 0,
   "captureJsonPath": "$.token",
   "captureVariableName": "token"
 }
 ```
 
-**Test B — booking (`runOrder`: 1)** — send the token as a cookie (adjust header names to match your API):
+Пример теста, который использует токен:
 
 ```json
 {
-  "name": "Create booking",
-  "method": "POST",
-  "endpoint": "/api/booking",
-  "requestHeadersJson": "{\"Cookie\":\"token={{token}}\",\"Content-Type\":\"application/json\"}",
-  "requestBody": "{\"roomid\":1,\"firstname\":\"ivan\",\"lastname\":\"ivanov\",\"depositpaid\":false,\"bookingdates\":{\"checkin\":\"2026-05-05\",\"checkout\":\"2026-05-06\"},\"email\":\"ivan1Ivanov@gmail.com\",\"phone\":\"+12233331112\"}",
-  "expectedStatus": 201,
-  "runOrder": 1
+  "name": "Get profile",
+  "feature": "Profile",
+  "story": "Authorized user",
+  "method": "GET",
+  "endpoint": "/api/profile",
+  "expectedStatus": 200,
+  "runOrder": 1,
+  "requestHeadersJson": "{\"Authorization\":\"Bearer {{token}}\"}"
 }
 ```
 
-If your API expects the raw token in `Authorization` instead, use e.g. `"requestHeadersJson": "{\"Authorization\":\"{{token}}\"}"`.
+Важно: переменные работают внутри общего запуска проекта через `POST /projects/{projectId}/tests/run`.
+Если запускать второй тест отдельно, переменная `{{token}}` не будет заполнена.
 
-## Demo Scenario (3-5 minutes)
+## BI-отчет
 
-Base URL for demo:
+Для каждого проекта доступен отчет:
+
+```http
+GET /projects/{id}/report
+```
+
+В отчете отображаются:
+- общее количество тестов;
+- количество успешных тестов;
+- количество упавших тестов;
+- количество еще не запущенных тестов;
+- процент успешности;
+- дата последнего запуска;
+- p50 и p95 времени ответа;
+- среднее время ответа;
+- длительность последнего общего прогона;
+- круговая диаграмма результатов;
+- столбиковая диаграмма длительности тестов;
+- линейный график длительности прогонов по датам;
+- таблица последних прогонов;
+- детализация по каждому тесту.
+
+## Основные REST-ручки
+
+### Проекты
+
+- `POST /projects` — создать проект.
+- `GET /projects` — получить список проектов.
+- `GET /projects/{id}` — получить проект по id.
+- `PUT /projects/{id}` — изменить проект.
+- `DELETE /projects/{id}` — удалить проект.
+- `GET /projects/{id}/report` — получить отчет по проекту.
+
+### Тесты внутри проекта
+
+- `POST /projects/{projectId}/tests` — создать тест.
+- `GET /projects/{projectId}/tests` — получить тесты проекта.
+- `GET /projects/{projectId}/tests/{testId}` — получить тест.
+- `PUT /projects/{projectId}/tests/{testId}` — изменить тест.
+- `DELETE /projects/{projectId}/tests/{testId}` — удалить тест.
+- `POST /projects/{projectId}/tests/run` — запустить все тесты проекта.
+
+### Запуск и история
+
+- `POST /tests/{testId}/run` — запустить один тест.
+- `GET /tests/{testId}/history` — получить историю запусков теста.
+
+## Демо-сценарий
+
+Для ручной проверки можно использовать JSONPlaceholder.
 
 ```bash
 export API="http://localhost:8080"
 ```
 
-### 1) Create project
+### 1. Создать проект
 
 ```bash
 curl -X POST "$API/projects" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "JSONPlaceholder checks",
+    "name": "JSONPlaceholder API",
     "baseUrl": "https://jsonplaceholder.typicode.com",
-    "description": "Demo project for diploma"
+    "description": "Тестовый сервис"
   }'
 ```
 
-Expected response (example):
-
-```json
-{
-  "id": 1,
-  "name": "JSONPlaceholder checks",
-  "baseUrl": "https://jsonplaceholder.typicode.com",
-  "description": "Demo project for diploma"
-}
-```
-
-### 2) Create API test in project
+### 2. Создать тест
 
 ```bash
 curl -X POST "$API/projects/1/tests" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Get post by id",
-    "description": "GET /posts/1 returns valid post",
+    "name": "Получение поста",
+    "description": "Проверка GET /posts/1",
     "testKey": "POST-GET-001",
+    "feature": "Posts",
+    "story": "Read",
     "method": "GET",
     "endpoint": "/posts/1",
-    "requestBody": null,
     "expectedResponseBody": "\"id\": 1",
     "expectedJsonPath": "$.id",
     "expectedJsonValue": "1",
     "expectedHeaderName": "Content-Type",
     "expectedHeaderValue": "application/json",
     "maxResponseTimeMs": 2000,
-    "expectedStatus": 200
+    "expectedStatus": 200,
+    "runOrder": 0
   }'
 ```
 
-### 3) Update test (CRUD check)
-
-```bash
-curl -X PUT "$API/projects/1/tests/1" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Get post by id (updated)",
-    "description": "Checks id and userId",
-    "testKey": "POST-GET-001",
-    "method": "GET",
-    "endpoint": "/posts/1",
-    "requestBody": null,
-    "expectedResponseBody": "\"userId\": 1",
-    "expectedJsonPath": "$.userId",
-    "expectedJsonValue": "1",
-    "expectedHeaderName": "Content-Type",
-    "expectedHeaderValue": "application/json",
-    "maxResponseTimeMs": 1500,
-    "expectedStatus": 200
-  }'
-```
-
-Expected: `200 OK` + updated test JSON.
-
-### 4) Run one test
+### 3. Запустить один тест
 
 ```bash
 curl -X POST "$API/tests/1/run"
 ```
 
-Expected response fields:
-- `success`
-- `statusCode`
-- `responseTimeMs`
-- `responseBody`
-- `errorMessage`
-
-### 5) Run all tests in project
+### 4. Запустить все тесты проекта
 
 ```bash
 curl -X POST "$API/projects/1/tests/run"
 ```
 
-Expected: JSON array with execution results for each test.
-
-### 6) Get history for test
+### 5. Получить историю запусков теста
 
 ```bash
 curl "$API/tests/1/history"
 ```
 
-Expected response item (example):
-
-```json
-{
-  "id": 5,
-  "testId": 1,
-  "testName": "Get post by id (updated)",
-  "success": true,
-  "statusCode": 200,
-  "responseTimeMs": 120,
-  "responseBody": "{...}",
-  "errorMessage": null,
-  "executedAt": "2026-05-04T19:10:00"
-}
-```
-
-### 7) Get project quality report
+### 6. Получить отчет по проекту
 
 ```bash
 curl "$API/projects/1/report"
 ```
-
-Expected response fields:
-- `totalTests`
-- `passedTests`
-- `failedTests`
-- `notRunTests`
-- `successRate`
-- `lastRunAt`
-- `responseTimeSampleCount` — number of stored runs in the project with non-null `responseTimeMs >= 0` (**all time**)
-- `responseTimeP50Ms`, `responseTimeP95Ms` — response-time percentiles over that sample (`null` if there are no timed runs yet)
-- `tests[]` with per-test details (`statusCode`, `responseTimeMs`, `errorMessage`, `lastRunAt`)
-
-### 8) Delete test (CRUD check)
-
-```bash
-curl -i -X DELETE "$API/projects/1/tests/1"
-```
-
-Expected: `204 No Content`.
-
-## Error Examples (demo / defense)
-
-### Validation error (`400`)
-
-```bash
-curl -X POST "$API/projects/1/tests" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "",
-    "method": "PATCH",
-    "endpoint": "",
-    "expectedStatus": null
-  }'
-```
-
-Expected: `400` with `message: "Request validation failed"` and `validationErrors`.
-
-### Not found (`404`)
-
-```bash
-curl "$API/projects/9999/report"
-```
-
-Expected: `404` with `message: "Project not found"`.
-
-## Short Demo Checklist
-
-- Open Swagger UI and show endpoint groups.
-- Create project and test from Swagger or `curl`.
-- Update test (`PUT`) and show changed fields.
-- Run one test and explain assertions (status/body/jsonpath/header/time).
-- Run all tests and open report (`/projects/{id}/report`).
-- Show latency aggregates: `responseTimeP50Ms` / `responseTimeP95Ms` over full project history.
-- Show one `400` and one `404` to demonstrate error handling.
-
-## Suggested Commit Message
-
-- `docs: add end-to-end mvp demo flow to readme`
