@@ -51,6 +51,22 @@ export type ProjectReportTestResponse = {
   lastRunAt: string | null
 }
 
+export type ProjectReportRunResponse = {
+  startedAt: string
+  testsCount: number
+  passedCount: number
+  failedCount: number
+  totalDurationMs: number
+}
+
+export type ProjectReportTrendResponse = {
+  date: string
+  runsCount: number
+  passedCount: number
+  failedCount: number
+  totalDurationMs: number
+}
+
 export type ProjectReportResponse = {
   projectId: number
   projectName: string
@@ -63,7 +79,12 @@ export type ProjectReportResponse = {
   responseTimeSampleCount: number
   responseTimeP50Ms: number | null
   responseTimeP95Ms: number | null
+  totalRuns: number
+  averageResponseTimeMs: number | null
+  lastRunTotalDurationMs: number | null
   tests: ProjectReportTestResponse[]
+  recentRuns: ProjectReportRunResponse[]
+  trend: ProjectReportTrendResponse[]
 }
 
 export type ExecutionResult = {

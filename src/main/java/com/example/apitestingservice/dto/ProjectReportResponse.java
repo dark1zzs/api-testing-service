@@ -15,6 +15,11 @@ public record ProjectReportResponse(
         long responseTimeSampleCount,
         Long responseTimeP50Ms,
         Long responseTimeP95Ms,
-        List<ProjectReportTestResponse> tests
+        long totalRuns,
+        Long averageResponseTimeMs,
+        Long lastRunTotalDurationMs,
+        List<ProjectReportTestResponse> tests,
+        List<ProjectReportRunResponse> recentRuns,
+        List<ProjectReportTrendResponse> trend
 ) {
 }
