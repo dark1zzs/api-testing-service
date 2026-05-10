@@ -5,8 +5,10 @@ import * as testsApi from '../api/tests'
 import { ApiError } from '../api/http'
 import type { ApiTestResponse, ProjectResponse, TestExecutionResponse } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { useI18n } from '../i18n'
 
 export function ProjectPage() {
+  const { t } = useI18n()
   const { projectId } = useParams<{ projectId: string }>()
   const id = Number(projectId)
   const navigate = useNavigate()
@@ -30,11 +32,11 @@ export function ProjectPage() {
       setProject(p)
       setTests(t)
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Failed to load project')
+      setError(e instanceof ApiError ? e.message : t('errors.loadProject'))
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, t])
 
   useEffect(() => {
     void load()
@@ -49,7 +51,7 @@ export function ProjectPage() {
       setRunAllResult(res)
       await load()
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Run all failed')
+      setError(e instanceof ApiError ? e.message : t('errors.runAll'))
     } finally {
       setRunBusy(false)
     }
@@ -61,29 +63,29 @@ export function ProjectPage() {
       await testsApi.runTest(testId)
       await load()
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Run failed')
+      setError(e instanceof ApiError ? e.message : t('errors.runTest'))
     }
   }
 
   async function removeTest(testId: number, name: string) {
-    if (!window.confirm(`Delete test "${name}"?`)) return
+    if (!window.confirm(`${t('actions.delete')} "${name}"?`)) return
     setError(null)
     try {
       await testsApi.deleteTest(id, testId)
       await load()
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Delete failed')
+      setError(e instanceof ApiError ? e.message : t('errors.deleteTest'))
     }
   }
 
   if (!Number.isFinite(id)) {
-    return <p className="muted">Invalid project id.</p>
+    return <p className="muted">{t('errors.invalidProjectId')}</p>
   }
 
   return (
     <div className="page">
       <nav className="breadcrumb">
-        <Link to="/projects">Projects</Link>
+        <Link to="/projects">{t('nav.projects')}</Link>
         <span>/</span>
         <span>{project?.name ?? '…'}</span>
       </nav>
@@ -91,18 +93,17 @@ export function ProjectPage() {
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {loading || !project ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('common.loading')}</p>
       ) : (
         <>
           <header className="page-header">
             <div>
               <h1>{project.name}</h1>
-              <p className="mono muted">{project.baseUrl}</p>
               {project.description ? <p>{project.description}</p> : null}
             </div>
             <div className="page-actions">
               <Link to={`/projects/${id}/report`} className="btn btn-secondary">
-                Report
+                {t('nav.report')}
               </Link>
               <button
                 type="button"
@@ -110,36 +111,36 @@ export function ProjectPage() {
                 disabled={runBusy}
                 onClick={() => void runAll()}
               >
-                {runBusy ? 'Running…' : 'Run all tests'}
+                {runBusy ? t('actions.running') : t('actions.runAll')}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => navigate(`/projects/${id}/tests/new`)}
               >
-                New test
+                {t('actions.newTest')}
               </button>
             </div>
           </header>
 
           {runAllResult && (
             <section className="card">
-              <h2>Last batch run</h2>
+              <h2>{t('test.lastRunResult')}</h2>
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Test</th>
-                    <th>OK</th>
-                    <th>HTTP</th>
-                    <th>ms</th>
-                    <th>Error</th>
+                    <th>{t('nav.test')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.http')}</th>
+                    <th>{t('common.ms')}</th>
+                    <th>{t('common.error')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {runAllResult.map((r) => (
                     <tr key={r.testId}>
                       <td>{r.testName}</td>
-                      <td>{r.success ? 'yes' : 'no'}</td>
+                      <td>{r.success ? t('report.passed') : t('report.failed')}</td>
                       <td>{r.statusCode}</td>
                       <td>{r.responseTimeMs}</td>
                       <td className="muted small">{r.errorMessage ?? '—'}</td>
@@ -151,54 +152,54 @@ export function ProjectPage() {
           )}
 
           <section className="card">
-            <h2>Tests</h2>
+            <h2>{t('tests.title')}</h2>
             {tests.length === 0 ? (
-              <p className="muted">No tests yet. Create one to get started.</p>
+              <p className="muted">{t('tests.empty')}</p>
             ) : (
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Order</th>
-                    <th>Name</th>
-                    <th>Method</th>
+                    <th>{t('tests.order')}</th>
+                    <th>{t('form.name')}</th>
+                    <th>{t('form.method').replace(' *', '')}</th>
                     <th>Endpoint</th>
-                    <th>Expected</th>
+                    <th>{t('tests.expected')}</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tests.map((t) => (
-                    <tr key={t.id}>
-                      <td>{t.runOrder ?? 0}</td>
+                  {tests.map((test) => (
+                    <tr key={test.id}>
+                      <td>{test.runOrder ?? 0}</td>
                       <td>
-                        <Link to={`/projects/${id}/tests/${t.id}`}>{t.name}</Link>
+                        <Link to={`/projects/${id}/tests/${test.id}`}>{test.name}</Link>
                       </td>
                       <td>
-                        <span className="pill">{t.method}</span>
+                        <span className="pill">{test.method}</span>
                       </td>
-                      <td className="mono small">{t.endpoint}</td>
-                      <td>{t.expectedStatus}</td>
+                      <td className="mono small">{test.endpoint}</td>
+                      <td>{test.expectedStatus}</td>
                       <td className="actions">
                         <button
                           type="button"
                           className="btn btn-ghost"
-                          onClick={() => void runOne(t.id)}
+                          onClick={() => void runOne(test.id)}
                         >
-                          Run
+                          {t('actions.run')}
                         </button>
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          onClick={() => navigate(`/projects/${id}/tests/${t.id}/edit`)}
+                          onClick={() => navigate(`/projects/${id}/tests/${test.id}/edit`)}
                         >
-                          Edit
+                          {t('actions.edit')}
                         </button>
                         <button
                           type="button"
                           className="btn btn-danger"
-                          onClick={() => void removeTest(t.id, t.name)}
+                          onClick={() => void removeTest(test.id, test.name)}
                         >
-                          Delete
+                          {t('actions.delete')}
                         </button>
                       </td>
                     </tr>

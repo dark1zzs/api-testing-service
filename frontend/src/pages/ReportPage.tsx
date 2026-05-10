@@ -9,21 +9,27 @@ import type {
   ProjectReportTrendResponse,
 } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { useI18n } from '../i18n'
+import type { Language } from '../i18n'
 
 const CHART_WIDTH = 640
 const CHART_HEIGHT = 190
 const CHART_PADDING = 28
 
-function formatDateTime(value: string | null) {
+function locale(language: Language) {
+  return language === 'ru' ? 'ru-RU' : 'en-US'
+}
+
+function formatDateTime(value: string | null, language: Language) {
   if (!value) return '—'
-  return new Intl.DateTimeFormat('ru-RU', {
+  return new Intl.DateTimeFormat(locale(language), {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(new Date(value))
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', {
+function formatDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(locale(language), {
     day: '2-digit',
     month: '2-digit',
   }).format(new Date(value))
@@ -33,9 +39,12 @@ function formatMs(value: number | null | undefined) {
   return value === null || value === undefined ? '—' : `${value} ms`
 }
 
-function statusLabel(test: ProjectReportTestResponse) {
-  if (!test.lastRunAt) return 'not run'
-  return test.success ? 'passed' : 'failed'
+function statusLabel(
+  test: ProjectReportTestResponse,
+  t: ReturnType<typeof useI18n>['t'],
+) {
+  if (!test.lastRunAt) return t('report.notRun')
+  return test.success ? t('report.passed') : t('report.failed')
 }
 
 function buildLinePoints(trend: ProjectReportTrendResponse[]) {
@@ -59,7 +68,13 @@ function buildLinePoints(trend: ProjectReportTrendResponse[]) {
     .join(' ')
 }
 
-function ResultPie({ report }: { report: ProjectReportResponse }) {
+function ResultPie({
+  report,
+  t,
+}: {
+  report: ProjectReportResponse
+  t: ReturnType<typeof useI18n>['t']
+}) {
   const total = Math.max(report.totalTests, 1)
   const passed = (report.passedTests / total) * 100
   const failed = (report.failedTests / total) * 100
@@ -72,20 +87,20 @@ function ResultPie({ report }: { report: ProjectReportResponse }) {
   return (
     <section className="card chart-card">
       <div>
-        <h2>Result split</h2>
-        <p className="muted small">Current status by latest run per test</p>
+        <h2>{t('report.resultSplit')}</h2>
+        <p className="muted small">{t('report.currentStatusHint')}</p>
       </div>
       <div className="pie-wrap">
-        <div className="pie" style={pieStyle} aria-label="Test result split" />
+        <div className="pie" style={pieStyle} aria-label={t('report.resultSplit')} />
         <div className="legend">
           <span>
-            <i className="legend-dot ok" /> Passed: {report.passedTests}
+            <i className="legend-dot ok" /> {t('report.passed')}: {report.passedTests}
           </span>
           <span>
-            <i className="legend-dot bad" /> Failed: {report.failedTests}
+            <i className="legend-dot bad" /> {t('report.failed')}: {report.failedTests}
           </span>
           <span>
-            <i className="legend-dot neutral" /> Not run: {report.notRunTests}
+            <i className="legend-dot neutral" /> {t('report.notRun')}: {report.notRunTests}
           </span>
         </div>
       </div>
@@ -93,14 +108,20 @@ function ResultPie({ report }: { report: ProjectReportResponse }) {
   )
 }
 
-function DurationBars({ tests }: { tests: ProjectReportTestResponse[] }) {
+function DurationBars({
+  tests,
+  t,
+}: {
+  tests: ProjectReportTestResponse[]
+  t: ReturnType<typeof useI18n>['t']
+}) {
   const maxMs = Math.max(...tests.map((test) => test.responseTimeMs ?? 0), 1)
 
   return (
     <section className="card chart-card">
       <div>
-        <h2>Test duration</h2>
-        <p className="muted small">Latest response time for each test</p>
+        <h2>{t('report.testDuration')}</h2>
+        <p className="muted small">{t('report.testDurationHint')}</p>
       </div>
       <div className="bar-list">
         {tests.map((test) => {
@@ -121,24 +142,32 @@ function DurationBars({ tests }: { tests: ProjectReportTestResponse[] }) {
   )
 }
 
-function DurationTrend({ trend }: { trend: ProjectReportTrendResponse[] }) {
+function DurationTrend({
+  trend,
+  language,
+  t,
+}: {
+  trend: ProjectReportTrendResponse[]
+  language: Language
+  t: ReturnType<typeof useI18n>['t']
+}) {
   const points = buildLinePoints(trend)
 
   return (
     <section className="card chart-card chart-wide">
       <div>
-        <h2>Run duration trend</h2>
-        <p className="muted small">Total saved response time by date</p>
+        <h2>{t('report.trend')}</h2>
+        <p className="muted small">{t('report.trendHint')}</p>
       </div>
       {trend.length === 0 ? (
-        <p className="muted">No execution data yet.</p>
+        <p className="muted">{t('report.noData')}</p>
       ) : (
         <div className="line-chart-wrap">
           <svg
             className="line-chart"
             viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
             role="img"
-            aria-label="Run duration trend"
+            aria-label={t('report.trend')}
           >
             <line
               x1={CHART_PADDING}
@@ -154,7 +183,7 @@ function DurationTrend({ trend }: { trend: ProjectReportTrendResponse[] }) {
                 <g key={item.date}>
                   <circle cx={coords[0]} cy={coords[1]} r="4" className="chart-point" />
                   <text x={coords[0]} y={CHART_HEIGHT - 6} textAnchor="middle">
-                    {formatDate(item.date)}
+                    {formatDate(item.date, language)}
                   </text>
                 </g>
               )
@@ -167,6 +196,7 @@ function DurationTrend({ trend }: { trend: ProjectReportTrendResponse[] }) {
 }
 
 export function ReportPage() {
+  const { language, t } = useI18n()
   const { projectId } = useParams<{ projectId: string }>()
   const id = Number(projectId)
   const [report, setReport] = useState<ProjectReportResponse | null>(null)
@@ -182,11 +212,11 @@ export function ReportPage() {
       const r = await projectsApi.getProjectReport(id)
       setReport(r)
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Failed to load report')
+      setError(e instanceof ApiError ? e.message : t('errors.loadReport'))
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, t])
 
   useEffect(() => {
     void load()
@@ -199,37 +229,38 @@ export function ReportPage() {
       await testsApi.runProjectTests(id)
       await load()
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Run all failed')
+      setError(e instanceof ApiError ? e.message : t('errors.runAll'))
     } finally {
       setRunBusy(false)
     }
   }
 
   if (!Number.isFinite(id)) {
-    return <p className="muted">Invalid project id.</p>
+    return <p className="muted">{t('errors.invalidProjectId')}</p>
   }
 
   return (
     <div className="page">
       <nav className="breadcrumb">
-        <Link to="/projects">Projects</Link>
+        <Link to="/projects">{t('nav.projects')}</Link>
         <span>/</span>
-        <Link to={`/projects/${id}`}>Project</Link>
+        <Link to={`/projects/${id}`}>{t('nav.project')}</Link>
         <span>/</span>
-        <span>Report</span>
+        <span>{t('nav.report')}</span>
       </nav>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {loading ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('common.loading')}</p>
       ) : !report ? null : (
         <>
           <header className="page-header">
             <div>
-              <h1>Report: {report.projectName}</h1>
+              <h1>{t('report.title')}</h1>
               <p className="muted">
-                Last run: {formatDateTime(report.lastRunAt)} · saved runs:{' '}
+                {report.projectName} · {t('report.lastRun')}:{' '}
+                {formatDateTime(report.lastRunAt, language)} · {t('report.savedRuns')}:{' '}
                 {report.totalRuns}
               </p>
             </div>
@@ -239,29 +270,29 @@ export function ReportPage() {
               disabled={runBusy}
               onClick={() => void runAll()}
             >
-              {runBusy ? 'Running…' : 'Run all tests'}
+              {runBusy ? t('actions.running') : t('actions.runAll')}
             </button>
           </header>
 
           <section className="stats">
             <div className="stat">
-              <span className="stat-label">Total</span>
+              <span className="stat-label">{t('report.total')}</span>
               <span className="stat-value">{report.totalTests}</span>
             </div>
             <div className="stat stat-ok">
-              <span className="stat-label">Passed</span>
+              <span className="stat-label">{t('report.passed')}</span>
               <span className="stat-value">{report.passedTests}</span>
             </div>
             <div className="stat stat-bad">
-              <span className="stat-label">Failed</span>
+              <span className="stat-label">{t('report.failed')}</span>
               <span className="stat-value">{report.failedTests}</span>
             </div>
             <div className="stat">
-              <span className="stat-label">Not run</span>
+              <span className="stat-label">{t('report.notRun')}</span>
               <span className="stat-value">{report.notRunTests}</span>
             </div>
             <div className="stat">
-              <span className="stat-label">Success rate</span>
+              <span className="stat-label">{t('report.successRate')}</span>
               <span className="stat-value">{report.successRate}%</span>
             </div>
             <div className="stat">
@@ -272,51 +303,52 @@ export function ReportPage() {
               <span className="stat-hint">n={report.responseTimeSampleCount}</span>
             </div>
             <div className="stat">
-              <span className="stat-label">Avg response</span>
+              <span className="stat-label">{t('report.avgResponse')}</span>
               <span className="stat-value">{formatMs(report.averageResponseTimeMs)}</span>
             </div>
             <div className="stat">
-              <span className="stat-label">Last run duration</span>
+              <span className="stat-label">{t('report.lastRunDuration')}</span>
               <span className="stat-value">{formatMs(report.lastRunTotalDurationMs)}</span>
             </div>
           </section>
 
           <section className="insight-card">
-            <h2>Executive summary</h2>
+            <h2>{t('report.executiveSummary')}</h2>
             <p>
-              Project has <strong>{report.totalTests}</strong> tests, current success
-              rate is <strong>{report.successRate}%</strong>. The latest measured
-              full run duration is{' '}
-              <strong>{formatMs(report.lastRunTotalDurationMs)}</strong>, with
-              average response time <strong>{formatMs(report.averageResponseTimeMs)}</strong>.
+              {t('report.executiveSummaryText', {
+                total: report.totalTests,
+                rate: report.successRate,
+                duration: formatMs(report.lastRunTotalDurationMs),
+                avg: formatMs(report.averageResponseTimeMs),
+              })}
             </p>
           </section>
 
           <div className="dashboard-grid">
-            <ResultPie report={report} />
-            <DurationBars tests={report.tests} />
-            <DurationTrend trend={report.trend} />
+            <ResultPie report={report} t={t} />
+            <DurationBars tests={report.tests} t={t} />
+            <DurationTrend trend={report.trend} language={language} t={t} />
           </div>
 
           <section className="card">
-            <h2>Recent runs</h2>
+            <h2>{t('report.recentRuns')}</h2>
             {report.recentRuns.length === 0 ? (
-              <p className="muted">No runs yet.</p>
+              <p className="muted">{t('report.noRuns')}</p>
             ) : (
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Tests</th>
-                    <th>Passed</th>
-                    <th>Failed</th>
-                    <th>Total duration</th>
+                    <th>{t('report.date')}</th>
+                    <th>{t('report.tests')}</th>
+                    <th>{t('report.passed')}</th>
+                    <th>{t('report.failed')}</th>
+                    <th>{t('report.totalDuration')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {report.recentRuns.map((run) => (
                     <tr key={run.startedAt}>
-                      <td className="small">{formatDateTime(run.startedAt)}</td>
+                      <td className="small">{formatDateTime(run.startedAt, language)}</td>
                       <td>{run.testsCount}</td>
                       <td>{run.passedCount}</td>
                       <td>{run.failedCount}</td>
@@ -329,27 +361,29 @@ export function ReportPage() {
           </section>
 
           <section className="card">
-            <h2>Per test</h2>
+            <h2>{t('report.perTest')}</h2>
             <table className="table">
               <thead>
                 <tr>
-                  <th>Test</th>
-                  <th>Status</th>
-                  <th>HTTP</th>
-                  <th>ms</th>
-                  <th>Last run</th>
-                  <th>Error</th>
+                  <th>{t('nav.test')}</th>
+                  <th>{t('common.status')}</th>
+                  <th>{t('common.http')}</th>
+                  <th>{t('common.ms')}</th>
+                  <th>{t('report.lastRun')}</th>
+                  <th>{t('common.error')}</th>
                 </tr>
               </thead>
               <tbody>
-                {report.tests.map((t) => (
-                  <tr key={t.testId}>
-                    <td>{t.testName}</td>
-                    <td>{statusLabel(t)}</td>
-                    <td>{t.statusCode ?? '—'}</td>
-                    <td>{formatMs(t.responseTimeMs)}</td>
-                    <td className="small muted">{formatDateTime(t.lastRunAt)}</td>
-                    <td className="small muted">{t.errorMessage ?? '—'}</td>
+                {report.tests.map((test) => (
+                  <tr key={test.testId}>
+                    <td>{test.testName}</td>
+                    <td>{statusLabel(test, t)}</td>
+                    <td>{test.statusCode ?? '—'}</td>
+                    <td>{formatMs(test.responseTimeMs)}</td>
+                    <td className="small muted">
+                      {formatDateTime(test.lastRunAt, language)}
+                    </td>
+                    <td className="small muted">{test.errorMessage ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

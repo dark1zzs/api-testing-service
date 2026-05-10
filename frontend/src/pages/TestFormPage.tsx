@@ -4,6 +4,7 @@ import * as testsApi from '../api/tests'
 import { ApiError } from '../api/http'
 import type { ApiTestRequest } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { useI18n } from '../i18n'
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE'] as const
 
@@ -13,6 +14,7 @@ function emptyToNull(s: string): string | null {
 }
 
 export function TestFormPage() {
+  const { t } = useI18n()
   const { projectId, testId } = useParams<{ projectId: string; testId?: string }>()
   const pid = Number(projectId)
   const isNew = testId === undefined
@@ -67,11 +69,11 @@ export function TestFormPage() {
         captureVariableName: t.captureVariableName ?? '',
       })
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Failed to load test')
+      setError(e instanceof ApiError ? e.message : t('errors.loadTest'))
     } finally {
       setLoading(false)
     }
-  }, [pid, tid])
+  }, [pid, tid, t])
 
   useEffect(() => {
     if (isNew) {
@@ -115,33 +117,33 @@ export function TestFormPage() {
       }
       navigate(`/projects/${pid}`)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Save failed')
+      setError(err instanceof ApiError ? err.message : t('errors.saveTest'))
     }
   }
 
   if (!Number.isFinite(pid)) {
-    return <p className="muted">Invalid project id.</p>
+    return <p className="muted">{t('errors.invalidProjectId')}</p>
   }
 
   return (
     <div className="page">
       <nav className="breadcrumb">
-        <Link to="/projects">Projects</Link>
+        <Link to="/projects">{t('nav.projects')}</Link>
         <span>/</span>
-        <Link to={`/projects/${pid}`}>Project</Link>
+        <Link to={`/projects/${pid}`}>{t('nav.project')}</Link>
         <span>/</span>
-        <span>{isNew ? 'New test' : 'Edit test'}</span>
+        <span>{isNew ? t('actions.newTest') : t('actions.edit')}</span>
       </nav>
 
-      <h1>{isNew ? 'New API test' : 'Edit API test'}</h1>
+      <h1>{isNew ? t('test.newTitle') : t('test.editTitle')}</h1>
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {loading ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('common.loading')}</p>
       ) : (
         <form className="card form-stack" onSubmit={onSubmit}>
           <label>
-            Name *
+            {t('form.name')}
             <input
               required
               value={form.name}
@@ -149,21 +151,21 @@ export function TestFormPage() {
             />
           </label>
           <label>
-            Description
+            {t('form.description')}
             <input
               value={form.description ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
           </label>
           <label>
-            Test key
+            {t('form.testKey')}
             <input
               value={form.testKey ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, testKey: e.target.value }))}
             />
           </label>
           <label>
-            Run order (lower runs first in &quot;Run all&quot;)
+            {t('form.runOrder')}
             <input
               type="number"
               min={0}
@@ -174,7 +176,7 @@ export function TestFormPage() {
             />
           </label>
           <label>
-            Request headers (JSON object)
+            {t('form.requestHeaders')}
             <textarea
               rows={3}
               className="mono"
@@ -187,7 +189,7 @@ export function TestFormPage() {
           </label>
           <div className="form-row">
             <label>
-              Capture JSONPath (after success)
+              {t('form.captureJsonPath')}
               <input
                 placeholder="$.token"
                 value={form.captureJsonPath ?? ''}
@@ -197,7 +199,7 @@ export function TestFormPage() {
               />
             </label>
             <label>
-              Capture variable name
+              {t('form.captureVariableName')}
               <input
                 placeholder="token"
                 value={form.captureVariableName ?? ''}
@@ -209,7 +211,7 @@ export function TestFormPage() {
           </div>
           <div className="form-row">
             <label>
-              Method *
+              {t('form.method')}
               <select
                 value={form.method}
                 onChange={(e) => setForm((f) => ({ ...f, method: e.target.value }))}
@@ -222,7 +224,7 @@ export function TestFormPage() {
               </select>
             </label>
             <label>
-              Expected HTTP status *
+              {t('form.expectedStatus')}
               <input
                 type="number"
                 required
@@ -233,7 +235,7 @@ export function TestFormPage() {
               />
             </label>
             <label>
-              Max response time (ms)
+              {t('form.maxResponseTime')}
               <input
                 type="number"
                 min={0}
@@ -248,7 +250,7 @@ export function TestFormPage() {
             </label>
           </div>
           <label>
-            Endpoint path *
+            {t('form.endpoint')}
             <input
               required
               placeholder="/posts/1"
@@ -257,7 +259,7 @@ export function TestFormPage() {
             />
           </label>
           <label>
-            Request body (raw)
+            {t('form.requestBody')}
             <textarea
               rows={4}
               className="mono"
@@ -266,7 +268,7 @@ export function TestFormPage() {
             />
           </label>
           <label>
-            Expected response body (substring)
+            {t('form.expectedBody')}
             <input
               value={form.expectedResponseBody ?? ''}
               onChange={(e) =>
@@ -276,7 +278,7 @@ export function TestFormPage() {
           </label>
           <div className="form-row">
             <label>
-              JSONPath
+              {t('form.expectedJsonPath')}
               <input
                 placeholder="$.id"
                 value={form.expectedJsonPath ?? ''}
@@ -286,7 +288,7 @@ export function TestFormPage() {
               />
             </label>
             <label>
-              Expected JSON value (string)
+              {t('form.expectedJsonValue')}
               <input
                 value={form.expectedJsonValue ?? ''}
                 onChange={(e) =>
@@ -297,7 +299,7 @@ export function TestFormPage() {
           </div>
           <div className="form-row">
             <label>
-              Expected header name
+              {t('form.expectedHeaderName')}
               <input
                 value={form.expectedHeaderName ?? ''}
                 onChange={(e) =>
@@ -306,7 +308,7 @@ export function TestFormPage() {
               />
             </label>
             <label>
-              Expected header value (substring)
+              {t('form.expectedHeaderValue')}
               <input
                 value={form.expectedHeaderValue ?? ''}
                 onChange={(e) =>
@@ -317,14 +319,14 @@ export function TestFormPage() {
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary">
-              Save
+              {t('actions.save')}
             </button>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => navigate(`/projects/${pid}`)}
             >
-              Cancel
+              {t('actions.cancel')}
             </button>
           </div>
         </form>

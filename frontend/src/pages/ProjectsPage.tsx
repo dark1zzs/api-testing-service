@@ -4,8 +4,10 @@ import * as projectsApi from '../api/projects'
 import { ApiError } from '../api/http'
 import type { ProjectRequest, ProjectResponse } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { useI18n } from '../i18n'
 
 export function ProjectsPage() {
+  const { t } = useI18n()
   const [items, setItems] = useState<ProjectResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,11 +24,11 @@ export function ProjectsPage() {
       const data = await projectsApi.listProjects()
       setItems(data)
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Failed to load projects')
+      setError(e instanceof ApiError ? e.message : t('errors.loadProjects'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void load()
@@ -44,31 +46,31 @@ export function ProjectsPage() {
       setForm((f) => ({ ...f, name: '', description: '' }))
       await load()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Create failed')
+      setError(err instanceof ApiError ? err.message : t('errors.createProject'))
     }
   }
 
   async function onDelete(id: number, name: string) {
-    if (!window.confirm(`Delete project "${name}"?`)) return
+    if (!window.confirm(`${t('projects.confirmDelete')} "${name}"?`)) return
     setError(null)
     try {
       await projectsApi.deleteProject(id)
       await load()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Delete failed')
+      setError(err instanceof ApiError ? err.message : t('errors.deleteProject'))
     }
   }
 
   return (
     <div className="page">
-      <h1>Projects</h1>
+      <h1>{t('projects.title')}</h1>
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <section className="card">
-        <h2>New project</h2>
+        <h2>{t('projects.new')}</h2>
         <form className="form-grid" onSubmit={onCreate}>
           <label>
-            Name
+            {t('form.name')}
             <input
               required
               value={form.name}
@@ -76,7 +78,7 @@ export function ProjectsPage() {
             />
           </label>
           <label>
-            Base URL
+            {t('projects.baseUrl')}
             <input
               required
               value={form.baseUrl}
@@ -84,7 +86,7 @@ export function ProjectsPage() {
             />
           </label>
           <label className="span-2">
-            Description
+            {t('form.description')}
             <input
               value={form.description ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -92,24 +94,24 @@ export function ProjectsPage() {
           </label>
           <div className="span-2">
             <button type="submit" className="btn btn-primary">
-              Create
+              {t('actions.create')}
             </button>
           </div>
         </form>
       </section>
 
       <section className="card">
-        <h2>All projects</h2>
+        <h2>{t('projects.all')}</h2>
         {loading ? (
-          <p className="muted">Loading…</p>
+          <p className="muted">{t('common.loading')}</p>
         ) : items.length === 0 ? (
-          <p className="muted">No projects yet.</p>
+          <p className="muted">{t('projects.empty')}</p>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Base URL</th>
+                <th>{t('form.name')}</th>
+                <th>{t('projects.baseUrl')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -126,7 +128,7 @@ export function ProjectsPage() {
                       className="btn btn-danger"
                       onClick={() => void onDelete(p.id, p.name)}
                     >
-                      Delete
+                      {t('actions.delete')}
                     </button>
                   </td>
                 </tr>

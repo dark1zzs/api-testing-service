@@ -4,8 +4,10 @@ import * as testsApi from '../api/tests'
 import { ApiError } from '../api/http'
 import type { ApiTestResponse, ExecutionResult, TestRunResponse } from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { useI18n } from '../i18n'
 
 export function TestDetailPage() {
+  const { t } = useI18n()
   const { projectId, testId } = useParams<{ projectId: string; testId: string }>()
   const pid = Number(projectId)
   const tid = Number(testId)
@@ -30,11 +32,11 @@ export function TestDetailPage() {
       setTest(t)
       setHistory(h)
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Failed to load test')
+      setError(e instanceof ApiError ? e.message : t('errors.loadTest'))
     } finally {
       setLoading(false)
     }
-  }, [pid, tid])
+  }, [pid, tid, t])
 
   useEffect(() => {
     void load()
@@ -48,30 +50,30 @@ export function TestDetailPage() {
       setLastRun(r)
       await load()
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Run failed')
+      setError(e instanceof ApiError ? e.message : t('errors.runTest'))
     } finally {
       setRunBusy(false)
     }
   }
 
   if (!Number.isFinite(pid) || !Number.isFinite(tid)) {
-    return <p className="muted">Invalid ids.</p>
+    return <p className="muted">{t('errors.invalidIds')}</p>
   }
 
   return (
     <div className="page">
       <nav className="breadcrumb">
-        <Link to="/projects">Projects</Link>
+        <Link to="/projects">{t('nav.projects')}</Link>
         <span>/</span>
-        <Link to={`/projects/${pid}`}>Project</Link>
+        <Link to={`/projects/${pid}`}>{t('nav.project')}</Link>
         <span>/</span>
-        <span>{test?.name ?? 'Test'}</span>
+        <span>{test?.name ?? t('nav.test')}</span>
       </nav>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {loading || !test ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('common.loading')}</p>
       ) : (
         <>
           <header className="page-header">
@@ -79,7 +81,7 @@ export function TestDetailPage() {
               <h1>{test.name}</h1>
               <p>
                 <span className="pill">{test.method}</span>{' '}
-                <span className="mono">{test.endpoint}</span> → expect{' '}
+                <span className="mono">{test.endpoint}</span> → {t('test.expect')}{' '}
                 <strong>{test.expectedStatus}</strong>
               </p>
             </div>
@@ -90,29 +92,29 @@ export function TestDetailPage() {
                 disabled={runBusy}
                 onClick={() => void run()}
               >
-                {runBusy ? 'Running…' : 'Run now'}
+                {runBusy ? t('actions.running') : t('actions.runNow')}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => navigate(`/projects/${pid}/tests/${tid}/edit`)}
               >
-                Edit
+                {t('actions.edit')}
               </button>
             </div>
           </header>
 
           {lastRun && (
             <section className="card">
-              <h2>Last run result</h2>
+              <h2>{t('test.lastRunResult')}</h2>
               <dl className="dl-grid">
-                <dt>Success</dt>
-                <dd>{lastRun.success ? 'yes' : 'no'}</dd>
-                <dt>HTTP</dt>
+                <dt>{t('test.success')}</dt>
+                <dd>{lastRun.success ? t('common.yes') : t('common.no')}</dd>
+                <dt>{t('common.http')}</dt>
                 <dd>{lastRun.statusCode}</dd>
-                <dt>Time (ms)</dt>
+                <dt>{t('report.testDuration')}</dt>
                 <dd>{lastRun.responseTimeMs}</dd>
-                <dt>Error</dt>
+                <dt>{t('common.error')}</dt>
                 <dd className="muted">{lastRun.errorMessage ?? '—'}</dd>
               </dl>
               {lastRun.responseBody && (
@@ -122,30 +124,30 @@ export function TestDetailPage() {
           )}
 
           <section className="card">
-            <h2>Definition</h2>
+            <h2>{t('test.definition')}</h2>
             <pre className="code-block">{JSON.stringify(test, null, 2)}</pre>
           </section>
 
           <section className="card">
-            <h2>History</h2>
+            <h2>{t('test.history')}</h2>
             {history.length === 0 ? (
-              <p className="muted">No runs yet.</p>
+              <p className="muted">{t('test.noRuns')}</p>
             ) : (
               <table className="table">
                 <thead>
                   <tr>
-                    <th>At</th>
-                    <th>OK</th>
-                    <th>HTTP</th>
-                    <th>ms</th>
-                    <th>Error</th>
+                    <th>{t('report.date')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.http')}</th>
+                    <th>{t('common.ms')}</th>
+                    <th>{t('common.error')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {history.map((h) => (
                     <tr key={h.id}>
                       <td className="small">{h.executedAt}</td>
-                      <td>{h.success ? 'yes' : 'no'}</td>
+                      <td>{h.success ? t('common.yes') : t('common.no')}</td>
                       <td>{h.statusCode}</td>
                       <td>{h.responseTimeMs}</td>
                       <td className="small muted">{h.errorMessage ?? '—'}</td>
