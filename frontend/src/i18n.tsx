@@ -36,6 +36,7 @@ type DictionaryKey =
   | 'errors.runAll'
   | 'errors.runTest'
   | 'errors.saveTest'
+  | 'errors.updateProject'
   | 'form.captureJsonPath'
   | 'form.captureVariableName'
   | 'form.description'
@@ -62,6 +63,7 @@ type DictionaryKey =
   | 'projects.all'
   | 'projects.baseUrl'
   | 'projects.confirmDelete'
+  | 'projects.edit'
   | 'projects.empty'
   | 'projects.new'
   | 'projects.title'
@@ -142,6 +144,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'errors.runAll': 'Не удалось запустить тесты',
     'errors.runTest': 'Не удалось запустить тест',
     'errors.saveTest': 'Не удалось сохранить тест',
+    'errors.updateProject': 'Не удалось обновить проект',
     'form.captureJsonPath': 'Capture JSONPath (после успешного ответа)',
     'form.captureVariableName': 'Имя переменной',
     'form.description': 'Описание',
@@ -168,6 +171,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'projects.all': 'Все проекты',
     'projects.baseUrl': 'Base URL',
     'projects.confirmDelete': 'Удалить проект',
+    'projects.edit': 'Редактирование проекта',
     'projects.empty': 'Проектов пока нет.',
     'projects.new': 'Новый проект',
     'projects.title': 'Проекты',
@@ -246,6 +250,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'errors.runAll': 'Run all failed',
     'errors.runTest': 'Run failed',
     'errors.saveTest': 'Save failed',
+    'errors.updateProject': 'Update failed',
     'form.captureJsonPath': 'Capture JSONPath (after success)',
     'form.captureVariableName': 'Capture variable name',
     'form.description': 'Description',
@@ -272,6 +277,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'projects.all': 'All projects',
     'projects.baseUrl': 'Base URL',
     'projects.confirmDelete': 'Delete project',
+    'projects.edit': 'Edit project',
     'projects.empty': 'No projects yet.',
     'projects.new': 'New project',
     'projects.title': 'Projects',
