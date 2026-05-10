@@ -22,7 +22,7 @@ classDiagram
         String requestHeadersJson
         String captureJsonPath
         String captureVariableName
-        int runOrder
+        Integer runOrder
         String expectedResponseBody
         String expectedJsonPath
         String expectedJsonValue

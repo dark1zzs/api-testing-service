@@ -49,8 +49,7 @@ public class ApiTest {
     /**
      * Lower values run first within a project when using "run all tests".
      */
-    @Column(nullable = false)
-    private int runOrder;
+    private Integer runOrder;
 
     @Lob
     private String expectedResponseBody;
