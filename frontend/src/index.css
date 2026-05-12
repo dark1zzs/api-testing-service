@@ -271,30 +271,41 @@ h2 {
 
 .grouped-tests-table {
   table-layout: fixed;
+  width: 100%;
 }
 
 .grouped-tests-table .col-order {
-  width: 7%;
+  width: 6%;
 }
 
 .grouped-tests-table .col-name {
-  width: 30%;
+  width: 25%;
 }
 
 .grouped-tests-table .col-method {
-  width: 9%;
+  width: 8%;
 }
 
 .grouped-tests-table .col-endpoint {
-  width: 22%;
+  width: 18%;
 }
 
 .grouped-tests-table .col-expected {
-  width: 10%;
+  width: 12%;
 }
 
 .grouped-tests-table .col-actions {
-  width: 22%;
+  width: 31%;
+}
+
+.grouped-tests-table th,
+.grouped-tests-table td {
+  overflow: hidden;
+}
+
+.grouped-tests-table td:nth-child(2),
+.grouped-tests-table td:nth-child(4) {
+  overflow-wrap: anywhere;
 }
 
 .actions {
@@ -303,9 +314,15 @@ h2 {
 }
 
 .grouped-tests-table td.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.25rem;
+  display: table-cell;
+  text-align: right;
+}
+
+.grouped-tests-table td.actions .btn {
+  min-width: 78px;
+  margin-left: 0.25rem;
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
 }
 
 .btn {
