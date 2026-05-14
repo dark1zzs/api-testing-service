@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import * as projectsApi from '../api/projects'
 import { ApiError } from '../api/http'
-import type { ProjectRequest, ProjectResponse } from '../types/api'
+import type {
+  OpenApiGenerationRequest,
+  ProjectRequest,
+  ProjectResponse,
+} from '../types/api'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { useI18n } from '../i18n'
 
@@ -11,9 +15,17 @@ export function ProjectsPage() {
   const [items, setItems] = useState<ProjectResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
   const [form, setForm] = useState<ProjectRequest>({
     name: '',
     baseUrl: 'https://jsonplaceholder.typicode.com',
+    description: '',
+  })
+  const [openApiForm, setOpenApiForm] = useState<OpenApiGenerationRequest>({
+    projectName: '',
+    baseUrl: '',
+    openApiUrl: '',
     description: '',
   })
 
@@ -37,6 +49,7 @@ export function ProjectsPage() {
   async function onCreate(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setGeneratedMessage(null)
     try {
       await projectsApi.createProject({
         name: form.name.trim(),
@@ -61,10 +74,44 @@ export function ProjectsPage() {
     }
   }
 
+  async function onGenerateFromOpenApi(e: React.FormEvent) {
+    e.preventDefault()
+    setGenerating(true)
+    setError(null)
+    setGeneratedMessage(null)
+    try {
+      const result = await projectsApi.generateFromOpenApi({
+        projectName: openApiForm.projectName.trim(),
+        baseUrl: openApiForm.baseUrl.trim(),
+        openApiUrl: openApiForm.openApiUrl.trim(),
+        description: openApiForm.description?.trim() || undefined,
+      })
+      setGeneratedMessage(
+        `${result.project.name}: ${t('projects.generated')} ${result.generatedTestsCount}`,
+      )
+      setOpenApiForm({
+        projectName: '',
+        baseUrl: '',
+        openApiUrl: '',
+        description: '',
+      })
+      await load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t('errors.openApiGeneration'))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   return (
     <div className="page">
       <h1>{t('projects.title')}</h1>
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
+      {generatedMessage ? (
+        <div className="success-banner" role="status">
+          {generatedMessage}
+        </div>
+      ) : null}
 
       <section className="card">
         <h2>{t('projects.new')}</h2>
@@ -95,6 +142,58 @@ export function ProjectsPage() {
           <div className="span-2">
             <button type="submit" className="btn btn-primary">
               {t('actions.create')}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="card">
+        <h2>{t('projects.generateFromOpenApi')}</h2>
+        <form className="form-grid" onSubmit={onGenerateFromOpenApi}>
+          <label>
+            {t('form.name')}
+            <input
+              required
+              value={openApiForm.projectName}
+              onChange={(e) =>
+                setOpenApiForm((f) => ({ ...f, projectName: e.target.value }))
+              }
+            />
+          </label>
+          <label>
+            {t('projects.baseUrl')}
+            <input
+              required
+              placeholder="https://petstore.swagger.io/v2"
+              value={openApiForm.baseUrl}
+              onChange={(e) =>
+                setOpenApiForm((f) => ({ ...f, baseUrl: e.target.value }))
+              }
+            />
+          </label>
+          <label className="span-2">
+            {t('projects.openApiUrl')}
+            <input
+              required
+              placeholder="https://petstore.swagger.io/v2/swagger.json"
+              value={openApiForm.openApiUrl}
+              onChange={(e) =>
+                setOpenApiForm((f) => ({ ...f, openApiUrl: e.target.value }))
+              }
+            />
+          </label>
+          <label className="span-2">
+            {t('form.description')}
+            <input
+              value={openApiForm.description ?? ''}
+              onChange={(e) =>
+                setOpenApiForm((f) => ({ ...f, description: e.target.value }))
+              }
+            />
+          </label>
+          <div className="span-2">
+            <button type="submit" className="btn btn-primary" disabled={generating}>
+              {generating ? t('actions.running') : t('actions.create')}
             </button>
           </div>
         </form>

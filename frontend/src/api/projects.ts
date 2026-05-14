@@ -1,5 +1,7 @@
 import { apiFetch } from './http'
 import type {
+  OpenApiGenerationRequest,
+  OpenApiGenerationResponse,
   ProjectReportResponse,
   ProjectRequest,
   ProjectResponse,
@@ -15,6 +17,13 @@ export function getProject(id: number) {
 
 export function createProject(body: ProjectRequest) {
   return apiFetch<ProjectResponse>('/projects', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export function generateFromOpenApi(body: OpenApiGenerationRequest) {
+  return apiFetch<OpenApiGenerationResponse>('/projects/generate-from-openapi', {
     method: 'POST',
     body: JSON.stringify(body),
   })

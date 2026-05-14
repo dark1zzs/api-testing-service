@@ -11,6 +11,13 @@ export type ProjectRequest = {
   description?: string | null
 }
 
+export type OpenApiGenerationRequest = {
+  projectName: string
+  baseUrl: string
+  openApiUrl: string
+  description?: string | null
+}
+
 export type ApiTestRequest = {
   name: string
   description?: string | null
@@ -40,6 +47,12 @@ export type ApiTestRequest = {
 export type ApiTestResponse = ApiTestRequest & {
   id: number
   projectId: number
+}
+
+export type OpenApiGenerationResponse = {
+  project: ProjectResponse
+  generatedTestsCount: number
+  tests: ApiTestResponse[]
 }
 
 export type ProjectReportTestResponse = {

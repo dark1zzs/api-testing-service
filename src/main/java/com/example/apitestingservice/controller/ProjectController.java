@@ -1,8 +1,11 @@
 package com.example.apitestingservice.controller;
 
+import com.example.apitestingservice.dto.OpenApiGenerationRequest;
+import com.example.apitestingservice.dto.OpenApiGenerationResponse;
 import com.example.apitestingservice.dto.ProjectRequest;
 import com.example.apitestingservice.dto.ProjectReportResponse;
 import com.example.apitestingservice.dto.ProjectResponse;
+import com.example.apitestingservice.service.OpenApiTestGenerationService;
 import com.example.apitestingservice.service.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -14,14 +17,24 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final OpenApiTestGenerationService openApiTestGenerationService;
 
-    public ProjectController(ProjectService projectService) {
+    public ProjectController(
+            ProjectService projectService,
+            OpenApiTestGenerationService openApiTestGenerationService
+    ) {
         this.projectService = projectService;
+        this.openApiTestGenerationService = openApiTestGenerationService;
     }
 
     @PostMapping
     public ProjectResponse createProject(@RequestBody @Valid ProjectRequest request) {
         return projectService.createProject(request);
+    }
+
+    @PostMapping("/generate-from-openapi")
+    public OpenApiGenerationResponse generateFromOpenApi(@RequestBody @Valid OpenApiGenerationRequest request) {
+        return openApiTestGenerationService.generate(request);
     }
 
     @GetMapping

@@ -33,6 +33,7 @@ type DictionaryKey =
   | 'errors.loadProjects'
   | 'errors.loadReport'
   | 'errors.loadTest'
+  | 'errors.openApiGeneration'
   | 'errors.runAll'
   | 'errors.runTest'
   | 'errors.saveTest'
@@ -65,7 +66,10 @@ type DictionaryKey =
   | 'projects.confirmDelete'
   | 'projects.edit'
   | 'projects.empty'
+  | 'projects.generated'
+  | 'projects.generateFromOpenApi'
   | 'projects.new'
+  | 'projects.openApiUrl'
   | 'projects.title'
   | 'report.avgResponse'
   | 'report.currentStatusHint'
@@ -141,6 +145,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'errors.loadProjects': 'Не удалось загрузить проекты',
     'errors.loadReport': 'Не удалось загрузить отчет',
     'errors.loadTest': 'Не удалось загрузить тест',
+    'errors.openApiGeneration': 'Не удалось сгенерировать тесты по OpenAPI',
     'errors.runAll': 'Не удалось запустить тесты',
     'errors.runTest': 'Не удалось запустить тест',
     'errors.saveTest': 'Не удалось сохранить тест',
@@ -173,7 +178,10 @@ const dictionaries: Record<Language, Dictionary> = {
     'projects.confirmDelete': 'Удалить проект',
     'projects.edit': 'Редактирование проекта',
     'projects.empty': 'Проектов пока нет.',
+    'projects.generated': 'Сгенерировано тестов',
+    'projects.generateFromOpenApi': 'Создать проект из OpenAPI',
     'projects.new': 'Новый проект',
+    'projects.openApiUrl': 'OpenAPI / Swagger URL',
     'projects.title': 'Проекты',
     'report.avgResponse': 'Среднее время',
     'report.currentStatusHint': 'Текущий статус по последнему запуску каждого теста',
@@ -247,6 +255,7 @@ const dictionaries: Record<Language, Dictionary> = {
     'errors.loadProjects': 'Failed to load projects',
     'errors.loadReport': 'Failed to load report',
     'errors.loadTest': 'Failed to load test',
+    'errors.openApiGeneration': 'Failed to generate tests from OpenAPI',
     'errors.runAll': 'Run all failed',
     'errors.runTest': 'Run failed',
     'errors.saveTest': 'Save failed',
@@ -279,7 +288,10 @@ const dictionaries: Record<Language, Dictionary> = {
     'projects.confirmDelete': 'Delete project',
     'projects.edit': 'Edit project',
     'projects.empty': 'No projects yet.',
+    'projects.generated': 'Generated tests',
+    'projects.generateFromOpenApi': 'Create project from OpenAPI',
     'projects.new': 'New project',
+    'projects.openApiUrl': 'OpenAPI / Swagger URL',
     'projects.title': 'Projects',
     'report.avgResponse': 'Avg response',
     'report.currentStatusHint': 'Current status by latest run per test',
