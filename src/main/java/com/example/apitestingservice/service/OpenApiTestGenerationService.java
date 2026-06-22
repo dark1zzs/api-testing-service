@@ -11,6 +11,8 @@ import com.example.apitestingservice.repository.ProjectRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -68,6 +70,8 @@ public class OpenApiTestGenerationService {
         try {
             String body = restClient.get()
                     .uri(openApiUrl)
+                    .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.USER_AGENT, "API-Testing-Service")
                     .retrieve()
                     .body(String.class);
             if (body == null || body.isBlank()) {
@@ -75,7 +79,7 @@ public class OpenApiTestGenerationService {
             }
             return objectMapper.readTree(body);
         } catch (RestClientException e) {
-            throw new IllegalArgumentException("Cannot load OpenAPI document");
+            throw new IllegalArgumentException("Cannot load OpenAPI document: " + e.getMessage());
         } catch (Exception e) {
             throw new IllegalArgumentException("OpenAPI document is not valid JSON");
         }
