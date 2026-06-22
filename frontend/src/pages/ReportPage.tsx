@@ -376,7 +376,11 @@ export function ReportPage() {
               <tbody>
                 {report.tests.map((test) => (
                   <tr key={test.testId}>
-                    <td>{test.testName}</td>
+                    <td>
+                      <Link to={`/projects/${id}/tests/${test.testId}`}>
+                        {test.testName}
+                      </Link>
+                    </td>
                     <td>{statusLabel(test, t)}</td>
                     <td>{test.statusCode ?? '—'}</td>
                     <td>{formatMs(test.responseTimeMs)}</td>
