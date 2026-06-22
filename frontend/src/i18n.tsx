@@ -84,6 +84,10 @@ type DictionaryKey =
   | 'report.notRun'
   | 'report.passed'
   | 'report.perTest'
+  | 'report.period'
+  | 'report.period.all'
+  | 'report.period.month'
+  | 'report.period.week'
   | 'report.recentRuns'
   | 'report.resultSplit'
   | 'report.savedRuns'
@@ -197,6 +201,10 @@ const dictionaries: Record<Language, Dictionary> = {
     'report.notRun': 'Не запускались',
     'report.passed': 'Успешно',
     'report.perTest': 'По тестам',
+    'report.period': 'Период отчета',
+    'report.period.all': 'Все время',
+    'report.period.month': 'Месяц',
+    'report.period.week': 'Неделя',
     'report.recentRuns': 'Последние прогоны',
     'report.resultSplit': 'Распределение результатов',
     'report.savedRuns': 'сохранено запусков',
@@ -307,6 +315,10 @@ const dictionaries: Record<Language, Dictionary> = {
     'report.notRun': 'Not run',
     'report.passed': 'Passed',
     'report.perTest': 'Per test',
+    'report.period': 'Report period',
+    'report.period.all': 'All time',
+    'report.period.month': 'Month',
+    'report.period.week': 'Week',
     'report.recentRuns': 'Recent runs',
     'report.resultSplit': 'Result split',
     'report.savedRuns': 'saved runs',

@@ -2,6 +2,7 @@ package com.example.apitestingservice.service;
 
 import com.example.apitestingservice.entity.ApiTest;
 import com.example.apitestingservice.entity.Project;
+import com.example.apitestingservice.entity.TestRun;
 import com.example.apitestingservice.model.ApiTestExecutionRequest;
 import com.example.apitestingservice.model.ExecutionResult;
 import com.example.apitestingservice.repository.ApiTestRepository;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -99,5 +101,40 @@ class TestExecutionServiceBatchTest {
         ArgumentCaptor<ApiTestExecutionRequest> captor = ArgumentCaptor.forClass(ApiTestExecutionRequest.class);
         verify(apiTestExecutor, times(2)).execute(captor.capture());
         assertEquals("secret", captor.getAllValues().get(1).requestHeaders().get("Authorization"));
+    }
+
+    @Test
+    void shouldSaveOneExecutionGroupIdForProjectRun() {
+        Long projectId = 2L;
+        Project project = new Project();
+        project.setId(projectId);
+        project.setBaseUrl("http://localhost:9");
+
+        ApiTest first = apiTest(20L, project, "/first");
+        ApiTest second = apiTest(21L, project, "/second");
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(projectId)).thenReturn(List.of(first, second));
+        when(testRunRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(apiTestExecutor.execute(any())).thenReturn(new ExecutionResult(true, 200, 1L, "{}", null));
+
+        testExecutionService.runProjectTests(projectId);
+
+        ArgumentCaptor<TestRun> captor = ArgumentCaptor.forClass(TestRun.class);
+        verify(testRunRepository, times(2)).save(captor.capture());
+
+        String groupId = captor.getAllValues().getFirst().getExecutionGroupId();
+        assertNotNull(groupId);
+        assertEquals(groupId, captor.getAllValues().get(1).getExecutionGroupId());
+    }
+
+    private ApiTest apiTest(Long id, Project project, String endpoint) {
+        ApiTest apiTest = new ApiTest();
+        apiTest.setId(id);
+        apiTest.setProject(project);
+        apiTest.setMethod("GET");
+        apiTest.setEndpoint(endpoint);
+        apiTest.setExpectedStatus(200);
+        return apiTest;
     }
 }

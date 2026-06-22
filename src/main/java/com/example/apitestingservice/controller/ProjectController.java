@@ -48,8 +48,11 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}/report")
-    public ProjectReportResponse getProjectReport(@PathVariable Long id) {
-        return projectService.getProjectReport(id);
+    public ProjectReportResponse getProjectReport(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "ALL") String period
+    ) {
+        return projectService.getProjectReport(id, period);
     }
 
     @PutMapping("/{id}")

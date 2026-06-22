@@ -15,6 +15,18 @@ import type { Language } from '../i18n'
 const CHART_WIDTH = 640
 const CHART_HEIGHT = 190
 const CHART_PADDING = 28
+const REPORT_PERIODS = ['ALL', 'WEEK', 'MONTH'] as const
+
+type ReportPeriod = (typeof REPORT_PERIODS)[number]
+
+const REPORT_PERIOD_LABELS: Record<
+  ReportPeriod,
+  'report.period.all' | 'report.period.week' | 'report.period.month'
+> = {
+  ALL: 'report.period.all',
+  WEEK: 'report.period.week',
+  MONTH: 'report.period.month',
+}
 
 function locale(language: Language) {
   return language === 'ru' ? 'ru-RU' : 'en-US'
@@ -203,20 +215,21 @@ export function ReportPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [runBusy, setRunBusy] = useState(false)
+  const [period, setPeriod] = useState<ReportPeriod>('ALL')
 
   const load = useCallback(async () => {
     if (!Number.isFinite(id)) return
     setLoading(true)
     setError(null)
     try {
-      const r = await projectsApi.getProjectReport(id)
+      const r = await projectsApi.getProjectReport(id, period)
       setReport(r)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('errors.loadReport'))
     } finally {
       setLoading(false)
     }
-  }, [id, t])
+  }, [id, period, t])
 
   useEffect(() => {
     void load()
@@ -264,14 +277,28 @@ export function ReportPage() {
                 {report.totalRuns}
               </p>
             </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={runBusy}
-              onClick={() => void runAll()}
-            >
-              {runBusy ? t('actions.running') : t('actions.runAll')}
-            </button>
+            <div className="page-actions">
+              <div className="segmented-control" aria-label={t('report.period')}>
+                {REPORT_PERIODS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={period === value ? 'active' : ''}
+                    onClick={() => setPeriod(value)}
+                  >
+                    {t(REPORT_PERIOD_LABELS[value])}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={runBusy}
+                onClick={() => void runAll()}
+              >
+                {runBusy ? t('actions.running') : t('actions.runAll')}
+              </button>
+            </div>
           </header>
 
           <section className="stats">

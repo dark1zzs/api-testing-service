@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TestExecutionService {
@@ -50,7 +51,7 @@ public class TestExecutionService {
                 .orElseThrow(() -> new NotFoundException("Test not found"));
 
         ApiTestExecutionRequest request = buildExecutionRequest(test, Map.of());
-        TestRun testRun = executeAndSave(test, request);
+        TestRun testRun = executeAndSave(test, request, UUID.randomUUID().toString());
 
         return new ExecutionResult(
                 testRun.isSuccess(),
@@ -68,10 +69,11 @@ public class TestExecutionService {
         List<ApiTest> tests = apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(projectId);
         Map<String, String> variables = new LinkedHashMap<>();
         List<TestExecutionResponse> responses = new ArrayList<>();
+        String executionGroupId = UUID.randomUUID().toString();
 
         for (ApiTest test : tests) {
             ApiTestExecutionRequest request = buildExecutionRequest(test, variables);
-            TestRun testRun = executeAndSave(test, request);
+            TestRun testRun = executeAndSave(test, request, executionGroupId);
             responses.add(toResponse(testRun));
 
             if (testRun.isSuccess()) {
@@ -155,7 +157,7 @@ public class TestExecutionService {
         }
     }
 
-    private TestRun executeAndSave(ApiTest test, ApiTestExecutionRequest request) {
+    private TestRun executeAndSave(ApiTest test, ApiTestExecutionRequest request, String executionGroupId) {
         ExecutionResult result = apiTestExecutor.execute(request);
 
         LocalDateTime executedAt = LocalDateTime.now();
@@ -167,6 +169,7 @@ public class TestExecutionService {
         testRun.setResponseBody(result.getResponseBody());
         testRun.setErrorMessage(result.getErrorMessage());
         testRun.setExecutedAt(executedAt);
+        testRun.setExecutionGroupId(executionGroupId);
 
         return testRunRepository.save(testRun);
     }

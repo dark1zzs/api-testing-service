@@ -40,6 +40,7 @@ export function deleteProject(id: number) {
   return apiFetch<void>(`/projects/${id}`, { method: 'DELETE' })
 }
 
-export function getProjectReport(id: number) {
-  return apiFetch<ProjectReportResponse>(`/projects/${id}/report`)
+export function getProjectReport(id: number, period: string = 'ALL') {
+  const search = new URLSearchParams({ period })
+  return apiFetch<ProjectReportResponse>(`/projects/${id}/report?${search.toString()}`)
 }

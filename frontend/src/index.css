@@ -134,6 +134,38 @@ h2 {
   align-items: center;
 }
 
+.segmented-control {
+  display: inline-flex;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border: 1px solid #343b52;
+  border-radius: 8px;
+  background: #0f1219;
+}
+
+.segmented-control button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 0.75rem;
+  background: transparent;
+  color: #9aa3b5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.segmented-control button:hover {
+  color: #e8eaef;
+}
+
+.segmented-control button.active {
+  background: #2d81e3;
+  color: #fff;
+}
+
 .project-actions .btn {
   min-width: 118px;
   min-height: 44px;

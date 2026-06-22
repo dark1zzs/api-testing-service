@@ -83,10 +83,15 @@ public class ProjectService {
     }
 
     public ProjectReportResponse getProjectReport(Long id) {
+        return getProjectReport(id, "ALL");
+    }
+
+    public ProjectReportResponse getProjectReport(Long id, String period) {
         Project project = findProjectById(id);
+        LocalDateTime periodStart = resolvePeriodStart(period);
         List<ApiTest> tests = apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(id);
         List<ProjectReportTestResponse> testReports = tests.stream()
-                .map(this::toReportTestResponse)
+                .map(test -> toReportTestResponse(test, periodStart))
                 .toList();
         List<ProjectReportTestResponse> executedTestReports = testReports.stream()
                 .filter(testReport -> testReport.lastRunAt() != null)
@@ -106,7 +111,10 @@ public class ProjectService {
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 
-        List<TestRun> projectRuns = testRunRepository.findByApiTest_Project_Id(id);
+        List<TestRun> projectRuns = filterRunsByPeriod(
+                testRunRepository.findByApiTest_Project_Id(id),
+                periodStart
+        );
         List<Long> responseTimesMs = projectRuns.stream()
                 .map(TestRun::getResponseTimeMs)
                 .toList();
@@ -137,6 +145,20 @@ public class ProjectService {
         );
     }
 
+    private LocalDateTime resolvePeriodStart(String period) {
+        if (period == null || period.isBlank() || "ALL".equalsIgnoreCase(period)) {
+            return null;
+        }
+        if ("WEEK".equalsIgnoreCase(period)) {
+            return LocalDateTime.now().minusWeeks(1);
+        }
+        if ("MONTH".equalsIgnoreCase(period)) {
+            return LocalDateTime.now().minusMonths(1);
+        }
+
+        throw new IllegalArgumentException("Unsupported report period: " + period);
+    }
+
     private Project findProjectById(Long id) {
         return projectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Project not found"));
@@ -151,16 +173,33 @@ public class ProjectService {
         );
     }
 
-    private Optional<TestRun> getLastRun(Long testId) {
+    private Optional<TestRun> getLastRun(Long testId, LocalDateTime periodStart) {
         return testRunRepository.findByApiTestId(testId)
                 .stream()
+                .filter(testRun -> testRun.getExecutedAt() != null)
+                .filter(testRun -> isRunInsidePeriod(testRun, periodStart))
                 .max(Comparator.comparing(TestRun::getExecutedAt));
     }
 
-    private ProjectReportTestResponse toReportTestResponse(ApiTest test) {
-        return getLastRun(test.getId())
+    private ProjectReportTestResponse toReportTestResponse(ApiTest test, LocalDateTime periodStart) {
+        return getLastRun(test.getId(), periodStart)
                 .map(testRun -> toExecutedReportTestResponse(test, testRun))
                 .orElseGet(() -> toNotRunReportTestResponse(test));
+    }
+
+    private List<TestRun> filterRunsByPeriod(List<TestRun> runs, LocalDateTime periodStart) {
+        return runs.stream()
+                .filter(testRun -> isRunInsidePeriod(testRun, periodStart))
+                .toList();
+    }
+
+    private boolean isRunInsidePeriod(TestRun testRun, LocalDateTime periodStart) {
+        if (periodStart == null) {
+            return true;
+        }
+
+        LocalDateTime executedAt = testRun.getExecutedAt();
+        return executedAt != null && !executedAt.isBefore(periodStart);
     }
 
     private ProjectReportTestResponse toExecutedReportTestResponse(ApiTest test, TestRun testRun) {
@@ -201,18 +240,30 @@ public class ProjectService {
     private List<ProjectReportRunResponse> buildRecentRuns(List<TestRun> runs) {
         return runs.stream()
                 .filter(testRun -> testRun.getExecutedAt() != null)
-                .collect(Collectors.groupingBy(
-                        testRun -> testRun.getExecutedAt().truncatedTo(ChronoUnit.SECONDS)
-                ))
+                .collect(Collectors.groupingBy(this::runGroupKey))
                 .entrySet()
                 .stream()
-                .map(entry -> toRunResponse(entry.getKey(), entry.getValue()))
+                .map(entry -> toRunResponse(entry.getValue()))
                 .sorted(Comparator.comparing(ProjectReportRunResponse::startedAt).reversed())
                 .limit(10)
                 .toList();
     }
 
-    private ProjectReportRunResponse toRunResponse(LocalDateTime startedAt, List<TestRun> runs) {
+    private String runGroupKey(TestRun testRun) {
+        String executionGroupId = testRun.getExecutionGroupId();
+        if (executionGroupId != null && !executionGroupId.isBlank()) {
+            return "group:" + executionGroupId;
+        }
+
+        return "legacy:" + testRun.getExecutedAt().truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    private ProjectReportRunResponse toRunResponse(List<TestRun> runs) {
+        LocalDateTime startedAt = runs.stream()
+                .map(TestRun::getExecutedAt)
+                .filter(executedAt -> executedAt != null)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
         long passedCount = runs.stream()
                 .filter(TestRun::isSuccess)
                 .count();

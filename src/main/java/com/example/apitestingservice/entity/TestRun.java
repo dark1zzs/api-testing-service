@@ -23,6 +23,7 @@ public class TestRun {
     private String errorMessage;
 
     private LocalDateTime executedAt;
+    private String executionGroupId;
 
     @ManyToOne
     @JoinColumn(name = "test_id")

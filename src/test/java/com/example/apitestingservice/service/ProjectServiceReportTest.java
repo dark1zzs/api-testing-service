@@ -93,6 +93,82 @@ class ProjectServiceReportTest {
         assertEquals(1, report.tests().size());
     }
 
+    @Test
+    void shouldFilterReportRunsByWeekPeriod() {
+        Long projectId = 2L;
+        Project project = new Project();
+        project.setId(projectId);
+        project.setName("Period demo");
+
+        ApiTest test = new ApiTest();
+        test.setId(20L);
+        test.setName("T1");
+        test.setTestKey("K1");
+        test.setProject(project);
+
+        TestRun freshRun = runWithMs(120L);
+        freshRun.setSuccess(true);
+        freshRun.setStatusCode(200);
+        freshRun.setExecutedAt(LocalDateTime.now().minusDays(2));
+
+        TestRun oldRun = runWithMs(900L);
+        oldRun.setSuccess(false);
+        oldRun.setStatusCode(500);
+        oldRun.setExecutedAt(LocalDateTime.now().minusDays(20));
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(projectId)).thenReturn(List.of(test));
+        when(testRunRepository.findByApiTestId(20L)).thenReturn(List.of(oldRun, freshRun));
+        when(testRunRepository.findByApiTest_Project_Id(projectId)).thenReturn(List.of(oldRun, freshRun));
+
+        ProjectReportResponse report = projectService.getProjectReport(projectId, "WEEK");
+
+        assertEquals(1, report.totalRuns());
+        assertEquals(1, report.responseTimeSampleCount());
+        assertEquals(120L, report.averageResponseTimeMs());
+        assertEquals(1, report.passedTests());
+        assertEquals(0, report.failedTests());
+        assertEquals(0, report.notRunTests());
+    }
+
+    @Test
+    void shouldGroupRecentRunsByExecutionGroupId() {
+        Long projectId = 3L;
+        Project project = new Project();
+        project.setId(projectId);
+        project.setName("Grouped demo");
+
+        ApiTest first = new ApiTest();
+        first.setId(30L);
+        first.setName("T1");
+        first.setTestKey("K1");
+        first.setProject(project);
+
+        String groupId = "batch-1";
+        TestRun firstRun = runWithMs(100L);
+        firstRun.setSuccess(true);
+        firstRun.setExecutedAt(LocalDateTime.parse("2026-06-22T19:24:01"));
+        firstRun.setExecutionGroupId(groupId);
+
+        TestRun secondRun = runWithMs(200L);
+        secondRun.setSuccess(false);
+        secondRun.setExecutedAt(LocalDateTime.parse("2026-06-22T19:24:03"));
+        secondRun.setExecutionGroupId(groupId);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(apiTestRepository.findByProjectIdOrderByRunOrderAscIdAsc(projectId)).thenReturn(List.of(first));
+        when(testRunRepository.findByApiTestId(30L)).thenReturn(List.of(secondRun));
+        when(testRunRepository.findByApiTest_Project_Id(projectId)).thenReturn(List.of(firstRun, secondRun));
+
+        ProjectReportResponse report = projectService.getProjectReport(projectId);
+
+        assertEquals(1, report.recentRuns().size());
+        assertEquals(2, report.recentRuns().getFirst().testsCount());
+        assertEquals(1, report.recentRuns().getFirst().passedCount());
+        assertEquals(1, report.recentRuns().getFirst().failedCount());
+        assertEquals(300L, report.recentRuns().getFirst().totalDurationMs());
+    }
+
     private static TestRun runWithMs(long ms) {
         TestRun run = new TestRun();
         run.setResponseTimeMs(ms);
