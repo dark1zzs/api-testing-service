@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +36,22 @@ class ProjectServiceReportTest {
 
     @InjectMocks
     private ProjectService projectService;
+
+    @Test
+    void shouldDeleteProjectWithTestsAndRunHistory() {
+        Long projectId = 1L;
+        Project project = new Project();
+        project.setId(projectId);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+
+        projectService.deleteProject(projectId);
+
+        var order = inOrder(testRunRepository, apiTestRepository, projectRepository);
+        order.verify(testRunRepository).deleteByApiTest_Project_Id(projectId);
+        order.verify(apiTestRepository).deleteByProjectId(projectId);
+        order.verify(projectRepository).delete(project);
+    }
 
     @Test
     void shouldIncludeResponseTimePercentilesAcrossAllProjectRuns() {

@@ -14,6 +14,7 @@ import com.example.apitestingservice.repository.ApiTestRepository;
 import com.example.apitestingservice.repository.ProjectRepository;
 import com.example.apitestingservice.repository.TestRunRepository;
 import com.example.apitestingservice.util.ResponseTimePercentiles;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -62,12 +63,13 @@ public class ProjectService {
         return toResponse(project);
     }
 
+    @Transactional
     public void deleteProject(Long id) {
-        if (!projectRepository.existsById(id)) {
-            throw new NotFoundException("Project not found");
-        }
+        Project project = findProjectById(id);
 
-        projectRepository.deleteById(id);
+        testRunRepository.deleteByApiTest_Project_Id(id);
+        apiTestRepository.deleteByProjectId(id);
+        projectRepository.delete(project);
     }
 
     public ProjectResponse updateProject(Long id, ProjectRequest request) {

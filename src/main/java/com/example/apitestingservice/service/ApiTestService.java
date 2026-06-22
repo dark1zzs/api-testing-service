@@ -7,10 +7,12 @@ import com.example.apitestingservice.entity.Project;
 import com.example.apitestingservice.exception.NotFoundException;
 import com.example.apitestingservice.repository.ApiTestRepository;
 import com.example.apitestingservice.repository.ProjectRepository;
+import com.example.apitestingservice.repository.TestRunRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,15 +21,18 @@ public class ApiTestService {
 
     private final ApiTestRepository apiTestRepository;
     private final ProjectRepository projectRepository;
+    private final TestRunRepository testRunRepository;
     private final ObjectMapper objectMapper;
 
     public ApiTestService(
             ApiTestRepository apiTestRepository,
             ProjectRepository projectRepository,
+            TestRunRepository testRunRepository,
             ObjectMapper objectMapper
     ) {
         this.apiTestRepository = apiTestRepository;
         this.projectRepository = projectRepository;
+        this.testRunRepository = testRunRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -65,8 +70,10 @@ public class ApiTestService {
         return toResponse(apiTestRepository.save(apiTest));
     }
 
+    @Transactional
     public void deleteApiTest(Long projectId, Long testId) {
         ApiTest apiTest = findApiTestInProject(projectId, testId);
+        testRunRepository.deleteByApiTestId(testId);
         apiTestRepository.delete(apiTest);
     }
 

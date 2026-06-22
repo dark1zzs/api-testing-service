@@ -12,4 +12,8 @@ public interface TestRunRepository extends JpaRepository<TestRun, Long> {
     List<TestRun> findByApiTestId(Long testId);
 
     List<TestRun> findByApiTest_Project_Id(Long projectId);
+
+    void deleteByApiTestId(Long testId);
+
+    void deleteByApiTest_Project_Id(Long projectId);
 }
